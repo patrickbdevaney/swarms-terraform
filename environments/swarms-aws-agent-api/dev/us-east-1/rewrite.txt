@@ -1,0 +1,221 @@
+consider this recursive abstract terraform as adding in more details as zkp in a lattice.
+each specialization is added and folded into our recursive system.
+
+we will use terraform to create a kind cluster.
+kind to load helm.
+helm to load git.
+git to load argocd.
+argocd to build and deploy new systems.
+keys and secrets to access keyed limited resources of value.
+these resources to then use free resources like github, huggingface, vercel etc, free tier.
+these free resources to then use expensive resources on demand in batch to save money.
+
+a recursive structure for a Terraform configuration that incorporates zero-knowledge proofs (ZKPs) in a lattice architecture. In this framework, each specialization or module could represent a ZKP being integrated into the overall system, allowing for enhanced privacy and security features. 
+
+In practical terms, you would define your Terraform resources to reflect these ZKP modules, ensuring that each addition maintains compatibility with the existing structure while also providing its functionality. As the system grows, you would recursively intertwine these specializations, effectively "folding" them into the overarching infrastructure. 
+
+The modules are folded in from new subdirectories each part of the recursive lattice,
+the objects returned are self descripitive terraform resources that describe the data and how it can be processed
+and even include means to modify them via function pointers and functors in terraform.
+
+
+To implement a recursive lattice architecture in Terraform with self-descriptive resources, you can organize your modules in subdirectories, where each module represents a distinct specialization. Here's how to structure your configuration:
+
+1. **Directory Structure**:
+   ```
+   terraform/
+   ├── main.tf
+   ├── modules/
+   │   ├── kind/
+   │   ├── helm/
+   │   ├── git/
+   │   ├── argocd/
+   │   └── zkps/
+   └── variables.tf
+   ```
+
+2. **Self-Descriptive Resources**:
+   Each module can output resources as self-descriptive objects. For example, for the `kind` module:
+   ```hcl
+   // modules/kind/main.tf
+   resource "kubernetes_cluster" "kind" {
+     name     = var.name
+     location = var.location
+   }
+
+   output "kind_cluster" {
+     value = {
+       name     = kubernetes_cluster.kind.name
+       location = kubernetes_cluster.kind.location
+       // Additional metadata can be included here
+     }
+   }
+   ```
+
+3. **Function Pointers and Functors**:
+   While Terraform doesn't support traditional function pointers like programming languages, you can utilize locals or dynamically generated configurations. You might implement transformations in your modules using Terraform's capabilities such as `locals`, `count`, or `for_each` to modify resources based on conditions.
+
+   Example:
+   ```hcl
+   locals {
+     resource_ids = [for id in var.ids : format("resource-%s", id)]
+   }
+
+   resource "some_resource" "modified" {
+     count = length(local.resource_ids)
+     id    = local.resource_ids[count.index]
+   }
+   ```
+
+4. **Combining Resources**:
+   In your main Terraform configuration, you will call these modules and pass values as needed, allowing for a composed structure:
+   ```hcl
+   module "kind" {
+     source   = "./modules/kind"
+     name     = "my-kind-cluster"
+     location = "us-central1"
+   }
+
+   module "helm" {
+     source = "./modules/helm"
+     // other variables
+   }
+
+   // Similarly include git, argocd, zkps modules
+   ```
+
+By recursively folding in modules in this way, you create a flexible and scalable architecture. Each module can include logic for processing data and modifying resources, allowing you to maintain a clear structure while expanding capabilities.
+```hcl
+variable "max_level" {
+  default = 3
+}
+
+resource "kind_cluster" "local" {
+  name = "local-cluster"
+}
+
+resource "argo_cicd" "ci_cd" {
+  enabled = true
+}
+
+locals {
+  levels = [for level in range(var.max_level) : level + 1]
+}
+
+resource "aws_account" "accounts" {
+  count = local.levels[0] == 1 ? 1 : 0
+  name  = "aws_account_${count.index + 1}"
+}
+
+resource "secrets_manager_secret" "secrets" {
+  count = local.levels[1] == 2 ? 1 : 0
+  name  = "my_secret"
+}
+
+resource "iam_user" "iam_auth" {
+  count = local.levels[2] == 3 ? 1 : 0
+  name  = "iam_user_${count.index + 1}"
+}
+
+output "cluster_info" {
+  value = kind_cluster.local
+}
+
+output "cicd_info" {
+  value = argo_cicd.ci_cd
+}
+
+output "aws_accounts" {
+  value = aws_account.accounts
+}
+
+output "secrets" {
+  value = secrets_manager_secret.secrets
+}
+
+output "iam_users" {
+  value = iam_user.iam_auth
+}
+```
+
+
+In this model, each module is structured to be self-descriptive while forming a recursive lattice. Here's a breakdown of how you would organize each component:
+
+1. **Directory Structure**: Each module should reside in its own subdirectory, which could represent different layers or levels of the lattice. For example:
+   ```
+   terraform/
+   ├── main.tf
+   ├── modules/
+   │   ├── level_1/
+   │   │   └── main.tf
+   │   ├── level_2/
+   │   │   └── main.tf
+   │   └── level_3/
+   │       └── main.tf
+   ```
+
+2. **Self-Descriptive Resources**: Each module should define resources that describe the data they manage and how it can be processed. This could include inputs, outputs, and any associated configurations.
+
+3. **Function Pointers and Functors**: You can implement flexibility by using Terraform's `locals` or `count` constructs to modify these resources dynamically based on configurations or conditions. While Terraform doesn't support traditional function pointers, you can simulate this behavior by using conditional logic and iteration.
+
+Here’s an example of using a recursive structure in Terraform:
+
+```hcl
+variable "max_level" {
+  default = 3
+}
+
+resource "kind_cluster" "local" {
+  name = "local-cluster"
+}
+
+resource "argo_cicd" "ci_cd" {
+  enabled = true
+}
+
+locals {
+  levels = [for level in range(var.max_level) : level + 1]
+}
+
+resource "aws_account" "accounts" {
+  count = local.levels[0] == 1 ? 1 : 0
+  name  = "aws_account_${count.index + 1}"
+}
+
+resource "secrets_manager_secret" "secrets" {
+  count = local.levels[1] == 2 ? 1 : 0
+  name  = "my_secret"
+}
+
+resource "iam_user" "iam_auth" {
+  count = local.levels[2] == 3 ? 1 : 0
+  name  = "iam_user_${count.index + 1}"
+}
+
+output "cluster_info" {
+  value = kind_cluster.local
+}
+
+output "cicd_info" {
+  value = argo_cicd.ci_cd
+}
+
+output "aws_accounts" {
+  value = aws_account.accounts
+}
+
+output "secrets" {
+  value = secrets_manager_secret.secrets
+}
+
+output "iam_users" {
+  value = iam_user.iam_auth
+}
+
+```
+
+In this setup:
+- `max_level` determines how deep the recursion goes.
+- Each resource generates based on hierarchical conditions, allowing each part of the lattice to be folded in dynamically.
+- Outputs provide descriptors for how resources can be used or modified, allowing for seamless integration within the larger infrastructure.
+
