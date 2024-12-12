@@ -104,9 +104,9 @@ module "ec2" {
 
   user_data = <<-EOF
 #!/bin/bash
+export HOME=/root
 apt update
-apt-get install ec2-instance-connect
-apt install -y git virtualenv
+apt-get install -y ec2-instance-connect git virtualenv
 
 if [ ! -d "/opt/swarms/" ];
   then
