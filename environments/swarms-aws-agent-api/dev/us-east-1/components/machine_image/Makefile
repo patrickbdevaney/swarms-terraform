@@ -1,4 +1,4 @@
 doit :
 	tofu init
 	tofu plan
-	tofu apply
+	tofu apply -auto-approve
