@@ -1,6 +1,3 @@
-#TASK:write terraform packer for ubuntu python fastapi server with custom git modules
-
-#To create a Terraform configuration using Packer for an Ubuntu-based FastAPI server with custom Git modules, you'll need to follow a few steps. Below is a concise example of how to structure your Packer template and Terraform files.
 
 provider "aws" {
   region = "us-east-1"
@@ -16,14 +13,27 @@ data "aws_ami" "ubuntu" {
   }
 }
 
-resource "aws_instance" "fastapi_server_test_instance" {
+resource "aws_instance" "swarms_server_test_instance" {
   count = var.test_server_count
-  ami           = data.aws_ami.ubuntu.id
-  instance_type = "t2.micro"
-
-  # add in this user data
+  ami   = data.aws_ami.ubuntu.id
+  instance_type = "t3g.large"
+  
+  user_data = <<-EOF
+#!/bin/bash
+sudo apt update
+sudo apt install -y git virtualenv
+rm -rf ./src/swarms
+if [ ! -d "/opt/swarms/" ];
+  then
+  git clone https://github.com/jmikedupont2/swarms "/opt/swarms/"
+fi    
+cd "/opt/swarms/" || exit 1 # "we need swarms"
+export BRANCH=feature/ec2
+git checkout --force  $BRANCH
+bash -x /opt/swarms/api/install.sh
+              EOF
   tags = {
-    Name = "FastAPI Server"
+    Name = "Swarms Server"
   }
 }
-
+}
