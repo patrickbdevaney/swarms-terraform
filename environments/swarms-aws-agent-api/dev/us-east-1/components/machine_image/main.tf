@@ -16,7 +16,7 @@ data "aws_ami" "ubuntu" {
 resource "aws_instance" "swarms_server_test_instance" {
   count = var.test_server_count
   ami   = data.aws_ami.ubuntu.id
-  instance_type = "t3g.large"
+  instance_type = "t3.large"
   
   user_data = <<-EOF
 #!/bin/bash
@@ -35,5 +35,4 @@ bash -x /opt/swarms/api/install.sh
   tags = {
     Name = "Swarms Server"
   }
-}
 }
