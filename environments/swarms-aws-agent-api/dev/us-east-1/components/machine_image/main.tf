@@ -79,8 +79,12 @@ bash -x /opt/swarms/api/install.sh
   subnet_id     = local.ec2_subnet_id
 }
 
-TASK FOR GPT:
-#1/ create an autoscaling group
-#2/ create a launch template
-#3/ create a lambda function to trigger the launching of new instances
 
+output "ec2_data" {
+  value = module.ec2
+}
+
+output "iam_instance_profile_name" {
+  value = module.ec2.iam_instance_profile_id
+  description = "IAM Instance Profile Name created for EC2 instance"
+}
