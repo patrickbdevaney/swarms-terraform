@@ -41,6 +41,7 @@ provider "aws" {
 }
 
 locals {
+  ami = "ami-0e2c8caa4b6378d8c"
   name   = "swarms"
   region = "us-east-1"
   ec2_subnet_id = "subnet-057c90cfe7b2e5646"
@@ -59,7 +60,32 @@ data "aws_ami" "ubuntu" {
       #"ubuntu/images/hvm-ssd/ubuntu*24*amd64-server*"
       "ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-*",
     ]
-    
+
+# from https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#AMICatalog:https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#AMICatalog:    
+# ubuntu (2 filtered, 8 unfiltered)
+# Free tier eligible
+# Ubuntu Server 24.04 LTS (HVM), SSD Volume Type
+# ami-0e2c8caa4b6378d8c (64-bit (x86)) / ami-0932ffb346ea84d48 (64-bit (Arm))
+# Platform: ubuntu
+# Root device type: ebs
+# Virtualization: hvm
+# ENA enabled: Yes
+# Select
+# 64-bit (x86)
+# 64-bit (Arm)
+# Ubuntu
+
+
+# ami-005fc0f236362e99f (64-bit (x86)) / ami-07ee04759daf109de (64-bit (Arm))
+# Ubuntu Server 22.04 LTS (HVM),EBS General Purpose (SSD) Volume Type. 
+# Platform: ubuntu
+# Root device type: ebs
+# Virtualization: hvm
+# ENA enabled: Yes
+# Select
+# 64-bit (x86)
+#   64-bit (Arm)
+  
     #"ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-arm64-server-20240823",
     #"ubuntu-minimal/images/hvm-ssd-gp3/ubuntu-noble-24.04-arm64-minimal-20240824",
     #"ubuntu-minimal/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-minimal-20240813",
@@ -105,7 +131,7 @@ module "ec2" {
   source  = "terraform-aws-modules/ec2-instance/aws"
   associate_public_ip_address = true # for now
   name =  local.name
-  ami   = data.aws_ami.ubuntu.id
+  ami   = local.ami # data.aws_ami.ubuntu.id
   instance_type = "t3.large"
   create_iam_instance_profile = true
   iam_role_description        = "IAM role for EC2 instance"
@@ -116,11 +142,11 @@ module "ec2" {
 
   root_block_device = [
     {
-      #encrypted   = true
-      #volume_type = "gp3"
-      #throughput  = 200
-      volume_size = 50
-#      tags = local.tags
+
+      # best practice is encrypted at rest
+      encrypted   = true
+      volume_size = 30
+      volume_type           = "gp3"
     }
   ]
 
