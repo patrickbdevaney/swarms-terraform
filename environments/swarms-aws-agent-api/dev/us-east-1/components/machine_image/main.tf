@@ -55,7 +55,14 @@ data "aws_ami" "ubuntu" {
   owners = ["099720109477"] # Ubuntu's account ID
   filter {
     name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
+    values = [
+      #"ubuntu/images/hvm-ssd/ubuntu*24*amd64-server*"
+      "ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-*",
+    ]
+    
+    #"ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-arm64-server-20240823",
+    #"ubuntu-minimal/images/hvm-ssd-gp3/ubuntu-noble-24.04-arm64-minimal-20240824",
+    #"ubuntu-minimal/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-minimal-20240813",
   }
 }
 
@@ -72,8 +79,13 @@ module "security_group_instance" {
        to_port     = 443
        protocol    = "tcp"
        cidr_blocks = "0.0.0.0/0"
-  #     cidr_blocks = "10.10.0.0/16"
-     }
+     },
+    {
+      from_port   = 80
+      to_port     = 80
+      protocol    = "tcp"
+      cidr_blocks = "0.0.0.0/0"
+    }
   ]
 
   #egress_rules = ["https-443-tcp"]
@@ -101,6 +113,16 @@ module "ec2" {
     AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
   }
   vpc_security_group_ids = [module.security_group_instance.security_group_id]
+
+  root_block_device = [
+    {
+      #encrypted   = true
+      #volume_type = "gp3"
+      #throughput  = 200
+      volume_size = 50
+#      tags = local.tags
+    }
+  ]
 
   user_data = <<-EOF
 #!/bin/bash

@@ -2,7 +2,7 @@
 ## Phase 1
 
 0. create standard vpc with a private network to host ec2, 
-this uses a natgw that costs money https://aws.amazon.com/vpc/pricing/
+this uses a natgw that costs money bhttps://aws.amazon.com/vpc/pricing/
 0.45 so we will put the intances in public for now and use security groups to limit access.
 
 1. create minimal ec2 instance in machine_image
