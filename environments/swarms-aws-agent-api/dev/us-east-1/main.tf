@@ -25,12 +25,29 @@ module "lt" {
   source = "./components/launch_template"
 }
 
-
 module "asg" {
   source = "./components/autoscaling_group"
   security_group_id = module.security.security_group_id
   instance_type = local.instance_type
   launch_template_id = module.lt.launch_template_id
+}
+
+variable "instance_types" {
+  type    = list(string)
+  default = [
+    "t4g.nano", "t3a.nano", "t3.nano", "t2.nano",
+    "t4g.micro", "t3a.micro", "t3.micro", "t2.micro", "t1.micro",
+    "t4g.small", "t3a.small",  "t3.small",  "t2.small",
+   # t2.medium t3.medium
+  ]
+}
+
+module "asg_dynamic" {
+  for_each = toset(var.instance_types)
+  source              = "./components/autoscaling_group"
+  security_group_id   = module.security.security_group_id
+  instance_type       = each.key
+  launch_template_id   = module.lt.launch_template_id
 }
 
 # module "alb" {

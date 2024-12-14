@@ -12,9 +12,9 @@ variable  image_id {
 variable  vpc_id {
   default = "vpc-04f28c9347af48b55"
 }
-provider "aws" {
-  region = "us-east-1"
-}
+#provider "aws" {
+#  region = "us-east-1"
+#}
 
 locals {
   ami = "ami-0e2c8caa4b6378d8c"
