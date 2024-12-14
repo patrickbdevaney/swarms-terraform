@@ -70,7 +70,7 @@ resource "aws_launch_template" "ec2_launch_template" {
   apt-get install -y --no-install-recommends ca-certificates=20230311 curl=7.88.1-10+deb12u7 |  echo oops
   curl -O "https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/$(dpkg --print-architecture)/latest/amazon-cloudwatch-agent.deb"
   dpkg -i -E amazon-cloudwatch-agent.deb
-
+ 
   if [ ! -d "/opt/swarms/" ]; then
     git clone https://github.com/jmikedupont2/swarms "/opt/swarms/"
   fi

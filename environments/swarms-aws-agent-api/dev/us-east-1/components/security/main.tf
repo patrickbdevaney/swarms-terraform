@@ -26,7 +26,7 @@ module "asg_sg" {
   ingress_rules = [
     "https-443-tcp",
     "http-80-tcp",
-    "ssh-tcp"
+#    "ssh-tcp" dont need this now
   ]
 
   egress_rules = ["all-all"]
