@@ -1,4 +1,5 @@
 variable security_group_id {}
+variable name {}
 variable instance_type {
  # default = "t3.micro"
 }
@@ -18,7 +19,7 @@ variable  vpc_id {
 
 locals {
   ami = "ami-0e2c8caa4b6378d8c"
-  name   = "swarms"
+ # name   = "swarms"
   region = "us-east-1"
   ec2_subnet_id = "subnet-057c90cfe7b2e5646"
 
@@ -32,12 +33,12 @@ locals {
 }
 
 resource "aws_iam_instance_profile" "ssm" {
-  name = "ssm-${local.name}"
+  name = "ssm-${var.name}"
   role = aws_iam_role.ssm.name
   tags = local.tags
 }
 resource "aws_iam_role" "ssm" {
-  name = "ssm-${local.name}"
+  name = "ssm-${var.name}"
   tags = local.tags
 
   assume_role_policy = jsonencode({
@@ -58,7 +59,7 @@ resource "aws_iam_role" "ssm" {
 module "autoscaling" {
   source  = "terraform-aws-modules/autoscaling/aws"
   version = "8.0.0"
-  name = local.name
+  name = var.name
 
 
   desired_capacity     = 1
@@ -66,8 +67,6 @@ module "autoscaling" {
   min_size             = 1
 
   create_launch_template = false
-  #launch_template_name        = "complete-${local.name}"
-  #launch_template_description = "Complete launch template example"
   update_default_version      = true
   
   launch_template_id   = var.launch_template_id
@@ -91,7 +90,7 @@ module "autoscaling" {
 
   
   create_iam_instance_profile = true
-  iam_role_name               = "ssm-${local.name}"
+  iam_role_name               = "ssm-${var.name}"
   iam_role_path               = "/ec2/"
   iam_role_description        = "SSM IAM role for swarms"
   iam_role_tags = {
