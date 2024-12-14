@@ -1,3 +1,17 @@
+variable security_group_id {}
+variable instance_type {
+ # default = "t3.micro"
+}
+
+variable launch_template_id {
+
+}
+variable  image_id {
+  default = "ami-0e2c8caa4b6378d8c"
+}
+variable  vpc_id {
+  default = "vpc-04f28c9347af48b55"
+}
 provider "aws" {
   region = "us-east-1"
 }
@@ -7,97 +21,85 @@ locals {
   name   = "swarms"
   region = "us-east-1"
   ec2_subnet_id = "subnet-057c90cfe7b2e5646"
-  vpc_id = "vpc-04f28c9347af48b55"
-  iam_instance_profile_name = "swarms-20241213150629570500000003"
+
+  #iam_instance_profile_name = "swarms-20241213150629570500000003"
+  iam_instance_profile_arn = aws_iam_instance_profile.ssm.arn
   tags = {
     project="swarms"
   }
-  launch_template_id = "lt-042e08d77d0fe4376"
+
+  instance_type = var.instance_type
 }
 
+resource "aws_iam_instance_profile" "ssm" {
+  name = "ssm-${local.name}"
+  role = aws_iam_role.ssm.name
+  tags = local.tags
+}
+resource "aws_iam_role" "ssm" {
+  name = "ssm-${local.name}"
+  tags = local.tags
 
-# lt = {
-#   "arn" = "arn:aws:ec2:us-east-1:767503528736:launch-template/lt-042e08d77d0fe4376"
-#   "block_device_mappings" = tolist([
-#     {
-#       "device_name" = "/dev/xvda"
-#       "ebs" = tolist([
-#         {
-#           "delete_on_termination" = ""
-#           "encrypted" = "true"
-#           "iops" = 0
-#           "kms_key_id" = ""
-#           "snapshot_id" = ""
-#           "throughput" = 0
-#           "volume_size" = 30
-#           "volume_type" = "gp3"
-#         },
-#       ])
-#       "no_device" = ""
-#       "virtual_name" = ""
-#     },
-#   ])
-#   "capacity_reservation_specification" = tolist([])
-#   "cpu_options" = tolist([])
-#   "credit_specification" = tolist([])
-#   "default_version" = 1
-#   "description" = ""
-#   "disable_api_stop" = false
-#   "disable_api_termination" = false
-#   "ebs_optimized" = ""
-#   "elastic_gpu_specifications" = tolist([])
-#   "elastic_inference_accelerator" = tolist([])
-#   "enclave_options" = tolist([])
-#   "hibernation_options" = tolist([])
-#   "iam_instance_profile" = tolist([
-#     {
-#       "arn" = ""
-#       "name" = "swarms-20241213150629570500000003"
-#     },
-#   ])
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = "sts:AssumeRole",
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        },
+        Effect = "Allow",
+        Sid    = ""
+      }
+    ]
+  })
+}
 
-#   "image_id" = "ami-0e2c8caa4b6378d8c"
-#   "instance_initiated_shutdown_behavior" = ""
-#   "instance_market_options" = tolist([])
-#   "instance_requirements" = tolist([])
-#   "instance_type" = "t3.large"
-#   "kernel_id" = ""
-#   "key_name" = ""
-#   "latest_version" = 1
-#   "license_specification" = toset([])
-#   "maintenance_options" = tolist([])
-#   "metadata_options" = tolist([])
-#   "monitoring" = tolist([])
-#   "name" = "swarms-launch-template-20241213193104143500000001"
-#   "name_prefix" = "swarms-launch-template-"
-#   "network_interfaces" = tolist([])
-#   "placement" = tolist([])
-#   "private_dns_name_options" = tolist([])
-#   "ram_disk_id" = ""
-#   "security_group_names" = toset([])
-#   "tag_specifications" = tolist([])
-#   "tags" = tomap({
-#     "project" = "swarms"
-#   })
-#   "tags_all" = tomap({
-#     "project" = "swarms"
-#   })
-#   "update_default_version" = tobool(null)
-#   "user_data" = "IyEvYmluL2Jhc2gKZXhwb3J0IEhPTUU9L3Jvb3QKYXB0IHVwZGF0ZQphcHQtZ2V0IGluc3RhbGwgLXkgZWMyLWluc3RhbmNlLWNvbm5lY3QgZ2l0IHZpcnR1YWxlbnYKCmlmIFsgISAtZCAiL29wdC9zd2FybXMvIiBdOyB0aGVuCiAgZ2l0IGNsb25lIGh0dHBzOi8vZ2l0aHViLmNvbS9qbWlrZWR1cG9udDIvc3dhcm1zICIvb3B0L3N3YXJtcy8iCmZpCmNkICIvb3B0L3N3YXJtcy8iIHx8IGV4aXQgMQpleHBvcnQgQlJBTkNIPWZlYXR1cmUvZWMyCmdpdCBjaGVja291dCAtLWZvcmNlICRCUkFOQ0gKYmFzaCAteCAvb3B0L3N3YXJtcy9hcGkvaW5zdGFsbC5zaAo="
-#   "vpc_security_group_ids" = toset([])
-# }
+module "autoscaling" {
+  source  = "terraform-aws-modules/autoscaling/aws"
+  version = "8.0.0"
+  name = local.name
 
-resource "aws_autoscaling_group" "ec2_autoscaling_group" {
+
   desired_capacity     = 1
   max_size             = 5
   min_size             = 1
 
-  launch_template {
-    id      = local.launch_template_id #<aws_launch_template.ec2_launch_template.id
-    version = "$Latest"
-  }
+  create_launch_template = false
+  #launch_template_name        = "complete-${local.name}"
+  #launch_template_description = "Complete launch template example"
+  update_default_version      = true
+  
+  launch_template_id   = var.launch_template_id
+  launch_template_version   = "$Latest"
 
   vpc_zone_identifier = [local.ec2_subnet_id]
 
+  instance_market_options = {
+    market_type = "spot"
+  }
+  network_interfaces = [{
+    associate_public_ip_address=true
+    device_index                = 0
+    delete_on_termination       = true
+    description                 = "interface1"
+    security_groups       = [var.security_group_id]
+  }
+  ]
+  instance_type = var.instance_type
+  image_id = var.image_id
+
+  
+  create_iam_instance_profile = true
+  iam_role_name               = "ssm-${local.name}"
+  iam_role_path               = "/ec2/"
+  iam_role_description        = "SSM IAM role for swarms"
+  iam_role_tags = {
+    CustomIamRole = "Yes"
+  }
+
+  iam_role_policies = {
+    AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+  }
 
 }
