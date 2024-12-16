@@ -80,15 +80,6 @@ module "alb" {
   }
   # listeners = {
   #   ex-https = {
-  #     port                        = 443
-  #     protocol                    = "HTTPS"
-  #     #ssl_policy                  = "ELBSecurityPolicy-TLS13-1-2-Res-2021-06"
-  #     certificate_arn             = module.acm.acm_certificate_arn
-  #     #additional_certificate_arns = [module.wildcard_cert.acm_certificate_arn]
-  #     #forward = {
-  #       #target_group_key = "ex-swarms-instance"
-  # 	target_group_arn = "ex-swarms-instance"
-  # 	#target_group = []
   #     #}
   #   }
   # }
@@ -587,6 +578,192 @@ module "acm" {
   zone_id     = aws_route53_zone.primary.zone_id
 }
 
+## now we just lift the listener code
+resource "aws_lb_listener" "this" {
+  port                        = 443
+  protocol                    = "HTTPS"
+  ssl_policy                  = "ELBSecurityPolicy-TLS13-1-2-Res-2021-06"
+  certificate_arn             = module.acm.acm_certificate_arn
+  load_balancer_arn = module.alb.arn
+  #additional_certificate_arns = [module.wildcard_cert.acm_certificate_arn]
+  #     #forward = {
+  #       #target_group_key = "ex-swarms-instance"
+  # 	target_group_arn = "ex-swarms-instance"
+  # 	#target_group = []
+
+  default_action {
+    target_group_arn =aws_lb_target_group.this.arn
+    #module.alb.target_groups["ex-lambda-with-trigger"].arn
+    #length(try(default_action.value.target_groups, [])) > 0 ? null : try(default_action.value.arn, aws_lb_target_group.this[default_action.value.target_group_key].arn, null)
+    type             = "forward"
+  }
+
+  # dynamic "default_action" {
+  #   for_each = try([each.value.weighted_forward], [])
+  #   content {
+  #     forward {
+  #       dynamic "target_group" {
+  #         for_each = try(default_action.value.target_groups, [])
+  #         content {
+  #           arn    = try(target_group.value.arn, aws_lb_target_group.this[target_group.value.target_group_key].arn, null)
+  #           weight = try(target_group.value.weight, null)
+  #         }
+  #       }
+  #       dynamic "stickiness" {
+  #         for_each = try([default_action.value.stickiness], [])
+  #         content {
+  #           duration = try(stickiness.value.duration, 60)
+  #           enabled  = try(stickiness.value.enabled, null)
+  #         }
+  #       }
+  #     }
+  #     order = try(default_action.value.order, null)
+  #     type  = "forward"
+  #   }
+  # }
+  # dynamic "default_action" {
+  #   for_each = try([each.value.redirect], [])
+  #   content {
+  #     order = try(default_action.value.order, null)
+  #     redirect {
+  #       host        = try(default_action.value.host, null)
+  #       path        = try(default_action.value.path, null)
+  #       port        = try(default_action.value.port, null)
+  #       protocol    = try(default_action.value.protocol, null)
+  #       query       = try(default_action.value.query, null)
+  #       status_code = default_action.value.status_code
+  #     }
+  #     type = "redirect"
+  #   }
+  # } 
+#  load_balancer_arn        = aws_lb.this[0].arn
+#  port                     = try(each.value.port, var.default_port)
+#  protocol                 = try(each.value.protocol, var.default_protocol)
+#  ssl_policy               = contains(["HTTPS", "TLS"], try(each.value.protocol, var.default_protocol)) ? try(each.value.ssl_policy, "ELBSecurityPolicy-TLS13-1-2-Res-2021-06") : try(each.value.ssl_policy, null)
+#  tcp_idle_timeout_seconds = try(each.value.tcp_idle_timeout_seconds, null)
+#  tags                     = merge(local.tags, try(each.value.tags, {}))
+}
+
+
+
+resource "aws_lb_target_group" "this" {
+  name_prefix                       = "swarms"
+  protocol                          = "HTTP"
+  port                              = 80
+  target_type                       = "instance"
+  vpc_id = var.vpc_id
+  deregistration_delay              = 10
+  load_balancing_algorithm_type     = "weighted_random"
+  load_balancing_anomaly_mitigation = "on"
+  load_balancing_cross_zone_enabled = false
+  protocol_version = "HTTP1"
+  #   #target_id        = "aws_instance.this.id"
+  #   #tags = {
+  #   #  InstanceTargetGroupTag = "swarms"
+  #   #}
+  # }
+  
+#  for_each = { for k, v in var.target_groups : k => v if local.create }
+#  connection_termination = try(each.value.connection_termination, null)
+#  deregistration_delay   = try(each.value.deregistration_delay, null)
+
+  # dynamic "health_check" {
+  #   for_each = try([each.value.health_check], [])
+
+  #   content {
+  #     enabled             = try(health_check.value.enabled, null)
+  #     healthy_threshold   = try(health_check.value.healthy_threshold, null)
+  #     interval            = try(health_check.value.interval, null)
+  #     matcher             = try(health_check.value.matcher, null)
+  #     path                = try(health_check.value.path, null)
+  #     port                = try(health_check.value.port, null)
+  #     protocol            = try(health_check.value.protocol, null)
+  #     timeout             = try(health_check.value.timeout, null)
+  #     unhealthy_threshold = try(health_check.value.unhealthy_threshold, null)
+  #   }
+  # }
+
+  # ip_address_type                    = try(each.value.ip_address_type, null)
+  # lambda_multi_value_headers_enabled = try(each.value.lambda_multi_value_headers_enabled, null)
+  # load_balancing_algorithm_type      = try(each.value.load_balancing_algorithm_type, null)
+  # load_balancing_anomaly_mitigation  = try(each.value.load_balancing_anomaly_mitigation, null)
+  # load_balancing_cross_zone_enabled  = try(each.value.load_balancing_cross_zone_enabled, null)
+  # name                               = try(each.value.name, null)
+  # name_prefix                        = try(each.value.name_prefix, null)
+  # port                               = try(each.value.target_type, null) == "lambda" ? null : try(each.value.port, var.default_port)
+  # preserve_client_ip                 = try(each.value.preserve_client_ip, null)
+  # protocol                           = try(each.value.target_type, null) == "lambda" ? null : try(each.value.protocol, var.default_protocol)
+  # protocol_version                   = try(each.value.protocol_version, null)
+  # proxy_protocol_v2                  = try(each.value.proxy_protocol_v2, null)
+  # slow_start                         = try(each.value.slow_start, null)
+
+  # dynamic "stickiness" {
+  #   for_each = try([each.value.stickiness], [])
+
+  #   content {
+  #     cookie_duration = try(stickiness.value.cookie_duration, null)
+  #     cookie_name     = try(stickiness.value.cookie_name, null)
+  #     enabled         = try(stickiness.value.enabled, true)
+  #     type            = var.load_balancer_type == "network" ? "source_ip" : stickiness.value.type
+  #   }
+  # }
+
+  # dynamic "target_failover" {
+  #   for_each = try(each.value.target_failover, [])
+
+  #   content {
+  #     on_deregistration = target_failover.value.on_deregistration
+  #     on_unhealthy      = target_failover.value.on_unhealthy
+  #   }
+  # }
+
+  # dynamic "target_group_health" {
+  #   for_each = try([each.value.target_group_health], [])
+
+  #   content {
+
+  #     dynamic "dns_failover" {
+  #       for_each = try([target_group_health.value.dns_failover], [])
+
+  #       content {
+  #         minimum_healthy_targets_count      = try(dns_failover.value.minimum_healthy_targets_count, null)
+  #         minimum_healthy_targets_percentage = try(dns_failover.value.minimum_healthy_targets_percentage, null)
+  #       }
+  #     }
+
+  #     dynamic "unhealthy_state_routing" {
+  #       for_each = try([target_group_health.value.unhealthy_state_routing], [])
+
+  #       content {
+  #         minimum_healthy_targets_count      = try(unhealthy_state_routing.value.minimum_healthy_targets_count, null)
+  #         minimum_healthy_targets_percentage = try(unhealthy_state_routing.value.minimum_healthy_targets_percentage, null)
+  #       }
+  #     }
+  #   }
+  # }
+
+  # dynamic "target_health_state" {
+  #   for_each = try([each.value.target_health_state], [])
+  #   content {
+  #     enable_unhealthy_connection_termination = try(target_health_state.value.enable_unhealthy_connection_termination, true)
+  #     unhealthy_draining_interval             = try(target_health_state.value.unhealthy_draining_interval, null)
+  #   }
+  # }
+
+  # target_type = try(each.value.target_type, null)
+  # vpc_id      = try(each.value.vpc_id, var.vpc_id)
+
+  # tags = merge(local.tags, try(each.value.tags, {}))
+
+  # lifecycle {
+  #   create_before_destroy = true
+  # }
+}
+
+
+
+
+
 output zone_id {
   value = aws_route53_zone.primary.zone_id
 }
@@ -597,3 +774,5 @@ output zone {
 output alb_target_group {
   value = module.alb  
 }
+
+
