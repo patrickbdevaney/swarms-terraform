@@ -72,6 +72,7 @@ module "asg_dynamic" {
   instance_type       = each.key
   name       = "swarms-size-${each.key}"
   launch_template_id   = module.lt_dynamic[each.key].launch_template_id
+  target_group_arn = module.alb.alb_target_group_arn
 }
 
 # module "alb" {

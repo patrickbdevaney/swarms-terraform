@@ -1,3 +1,4 @@
+variable target_group_arn{}
 variable security_group_id {}
 variable name {}
 variable instance_type {
@@ -22,7 +23,7 @@ locals {
  # name   = "swarms"
   region = "us-east-1"
   ec2_subnet_id = "subnet-057c90cfe7b2e5646"
-
+  target_group_arn = var.target_group_arn
   #iam_instance_profile_name = "swarms-20241213150629570500000003"
   iam_instance_profile_arn = aws_iam_instance_profile.ssm.arn
   tags = {
