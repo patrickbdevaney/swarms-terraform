@@ -23,7 +23,7 @@ locals {
  # name   = "swarms"
   region = "us-east-1"
   ec2_subnet_id = "subnet-057c90cfe7b2e5646"
-  target_group_arn = var.target_group_arn
+
   #iam_instance_profile_name = "swarms-20241213150629570500000003"
   iam_instance_profile_arn = aws_iam_instance_profile.ssm.arn
   tags = {
@@ -100,6 +100,14 @@ module "autoscaling" {
 
   iam_role_policies = {
     AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+  }
+
+  #    target_group_arn = 
+  traffic_source_attachments = {
+    ex-alb = {
+      traffic_source_identifier = var.target_group_arn
+      traffic_source_type       = "elbv2" # default
+    }
   }
 
 }
