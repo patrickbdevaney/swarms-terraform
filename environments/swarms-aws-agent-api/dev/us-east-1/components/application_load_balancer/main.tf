@@ -26,7 +26,7 @@ locals {
 module "alb" {
   source  = "terraform-aws-modules/alb/aws"
   version = "9.12.0"
-  name    = var.name # local.name
+  name    = "${var.name}-api" # local.name
   vpc_id  = var.vpc_id # module.vpc.vpc_id
   subnets = var.public_subnets # module.vpc.public_subnets
   enable_deletion_protection = false
@@ -40,32 +40,27 @@ resource "aws_route53_zone" "primary" {
    name = var.domain_name
 }
 
-
-#   name = var.domain_name
-
 resource "aws_route53_record" "api-cname" {
   zone_id = aws_route53_zone.primary.zone_id
   name    = "us-east-1.${var.domain_name}"
   type    = "CNAME"
   ttl     = 5
 
-  weighted_routing_policy {
-    weight = 10
-  }
-
-  set_identifier = "dev"
+#  weighted_routing_policy {
+#    weight = 10
+#  }
+  #set_identifier = "dev"
   records        = [
     module.alb.dns_name
   ]
 }
-
-
 
 data "cloudflare_zone" "zone" {
   #type   = "full"
   name   = "introspector.meme"
   account_id = "0ceffbadd0a04623896f5317a1e40d94"
 }
+
 resource "cloudflare_record" "aws-ns-record" {
   count = "${length(aws_route53_zone.primary.name_servers)}"
   #domain = "${var.domain_name}"
@@ -116,10 +111,28 @@ resource "aws_lb_target_group" "this" {
   target_type                       = "instance"
   vpc_id = var.vpc_id
   deregistration_delay              = 10
-  load_balancing_algorithm_type     = "weighted_random"
-  load_balancing_anomaly_mitigation = "on"
-  load_balancing_cross_zone_enabled = false
+  #load_balancing_algorithm_type     = "weighted_random"
+  #load_balancing_anomaly_mitigation = "on"
+  #load_balancing_cross_zone_enabled = false
   protocol_version = "HTTP1"
+  #
+  health_check {
+    path = "/v1/docs" # the docs api
+    enabled             = true
+    healthy_threshold   = 10
+    interval            = 130
+    port                = "traffic-port"
+    protocol            = "HTTP"
+    timeout             = 120
+    unhealthy_threshold = 10
+  }
+  
+#  stickiness {
+#    cookie_duration = 86400
+#    enabled         = true
+#    type            = "lb_cookie"
+#  }
+  
 }
 
 output zone_id {
@@ -133,4 +146,10 @@ output alb_target_group_arn {
   value = aws_lb_target_group.this.arn
 }
 
+output dns {
+  value = module.alb.dns_name
+}
 
+output cname {
+  value = aws_route53_record.api-cname.fqdn
+}

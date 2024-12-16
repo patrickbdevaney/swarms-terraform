@@ -51,7 +51,7 @@ module "lt_dynamic" {
   for_each = toset(var.instance_types)
   instance_type       = each.key
   name       = "swarms-size-${each.key}"
-  security_group_id = module.security.security_group_id
+  security_group_id = module.security.internal_security_group_id
   source = "./components/launch_template"
 }
 
@@ -69,7 +69,7 @@ module "alb" {
 module "asg_dynamic" {
   for_each = toset(var.instance_types)
   source              = "./components/autoscaling_group"
-  security_group_id   = module.security.internal_security_group_id
+#  security_group_id   = module.security.internal_security_group_id
   instance_type       = each.key
   name       = "swarms-size-${each.key}"
   launch_template_id   = module.lt_dynamic[each.key].launch_template_id

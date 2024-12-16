@@ -1,5 +1,5 @@
 variable target_group_arn{}
-variable security_group_id {}
+#variable security_group_id {}
 variable name {}
 variable instance_type {
  # default = "t3.micro"
@@ -62,7 +62,7 @@ module "autoscaling" {
   version = "8.0.0"
   name = var.name
 
-
+  health_check_type         = "EC2"
   desired_capacity     = 1
   max_size             = 5
   min_size             = 1
@@ -83,7 +83,7 @@ module "autoscaling" {
     device_index                = 0
     delete_on_termination       = true
     description                 = "interface1"
-    security_groups       = [var.security_group_id]
+#    security_groups       = [var.security_group_id]
   }
   ]
   instance_type = var.instance_type
