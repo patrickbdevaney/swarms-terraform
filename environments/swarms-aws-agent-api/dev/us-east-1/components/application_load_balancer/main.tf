@@ -3,17 +3,14 @@
 #   }
 
 variable  name    {} #   = local.name
+variable  domain_name    {} #   = local.name
 variable  vpc_id  {}  #= module.vpc.vpc_id
-variable  subnets {} #= module.vpc.public_subnets
-
-provider "aws" {
-  region = local.region
-}
+#variable  subnets {} #= module.vpc.public_subnets
+variable  public_subnets {} #= module.vpc.public_subnets
 
 data "aws_availability_zones" "available" {}
 
 locals {
-  region = "eu-west-1"
   name   = "ex-${basename(path.cwd)}"
 
   vpc_cidr = "10.0.0.0/16"
@@ -30,12 +27,9 @@ locals {
 # Application Load Balancer
 ##################################################################
 
-
 module "alb" {
-#  provider = var.provider_alias
   source  = "terraform-aws-modules/alb/aws"
   version = "9.12.0"
-
   name    = var.name # local.name
   vpc_id  = var.vpc_id # module.vpc.vpc_id
   subnets = var.public_subnets # module.vpc.public_subnets
@@ -63,9 +57,43 @@ module "alb" {
   security_group_egress_rules = {
     all = {
       ip_protocol = "-1"
-      cidr_ipv4   = module.vpc.vpc_cidr_block
+      cidr_ipv4   = "0.0.0.0/32" #module.vpc.vpc_cidr_block
     }
   }
+  client_keep_alive = 7200
+  target_groups = {
+    # ex-swarms-instance = {
+    #   name_prefix                       = "swarms"
+    #   protocol                          = "HTTP"
+    #   port                              = 80
+    #   target_type                       = "instance"
+    #   #deregistration_delay              = 10
+    #   #load_balancing_algorithm_type     = "weighted_random"
+    #   #load_balancing_anomaly_mitigation = "on"
+    #   #load_balancing_cross_zone_enabled = false
+    #   #protocol_version = "HTTP1"
+    #   #target_id        = "aws_instance.this.id"
+    #   #tags = {
+    #   #  InstanceTargetGroupTag = "swarms"
+    #   #}
+    # }
+  }
+  # listeners = {
+  #   ex-https = {
+  #     port                        = 443
+  #     protocol                    = "HTTPS"
+  #     #ssl_policy                  = "ELBSecurityPolicy-TLS13-1-2-Res-2021-06"
+  #     certificate_arn             = module.acm.acm_certificate_arn
+  #     #additional_certificate_arns = [module.wildcard_cert.acm_certificate_arn]
+  #     #forward = {
+  #       #target_group_key = "ex-swarms-instance"
+  # 	target_group_arn = "ex-swarms-instance"
+  # 	#target_group = []
+  #     #}
+  #   }
+  # }
+  tags = local.tags
+}
 
 #  access_logs = {
 #    bucket = module.log_bucket.s3_bucket_id
@@ -78,19 +106,16 @@ module "alb" {
 #    prefix  = "connection-logs"
 #  }
 
-  client_keep_alive = 7200
-
-  # listeners = {
-  #   ex-http-https-redirect = {
-  #     port     = 80
-  #     protocol = "HTTP"
-  #     redirect = {
-  #       port        = "443"
-  #       protocol    = "HTTPS"
-  #       status_code = "HTTP_301"
-  #     }
-
-  #     rules = {
+    # ex-http-https-redirect = {
+    #   port     = 80
+    #   protocol = "HTTP"
+    #   redirect = {
+    #     port        = "443"
+    #     protocol    = "HTTPS"
+    #     status_code = "HTTP_301"
+    #   }
+    # }
+      #     rules = {
   #       ex-fixed-response = {
   #         priority = 3
   #         actions = [{
@@ -99,7 +124,6 @@ module "alb" {
   #           status_code  = 200
   #           message_body = "This is a fixed response"
   #         }]
-
   #         conditions = [{
   #           http_header = {
   #             http_header_name = "x-Gimme-Fixed-Response"
@@ -107,7 +131,6 @@ module "alb" {
   #           }
   #         }]
   #       }
-
   #       ex-weighted-forward = {
   #         priority = 4
   #         actions = [{
@@ -127,7 +150,6 @@ module "alb" {
   #             duration = 3600
   #           }
   #         }]
-
   #         conditions = [{
   #           query_string = {
   #             key   = "weighted"
@@ -135,7 +157,6 @@ module "alb" {
   #           }
   #         }]
   #       }
-
   #       ex-redirect = {
   #         priority = 5000
   #         actions = [{
@@ -146,7 +167,6 @@ module "alb" {
   #           query       = "v=dQw4w9WgXcQ"
   #           protocol    = "HTTPS"
   #         }]
-
   #         conditions = [{
   #           query_string = [{
   #             key   = "video"
@@ -160,7 +180,6 @@ module "alb" {
   #       }
   #     }
   #   }
-
   #   ex-http-weighted-target = {
   #     port     = 81
   #     protocol = "HTTP"
@@ -177,7 +196,6 @@ module "alb" {
   #       ]
   #     }
   #   }
-
   #   ex-fixed-response = {
   #     port     = 82
   #     protocol = "HTTP"
@@ -187,18 +205,6 @@ module "alb" {
   #       status_code  = "200"
   #     }
   #   }
-
-  #   ex-https = {
-  #     port                        = 443
-  #     protocol                    = "HTTPS"
-  #     ssl_policy                  = "ELBSecurityPolicy-TLS13-1-2-Res-2021-06"
-  #     certificate_arn             = module.acm.acm_certificate_arn
-  #     additional_certificate_arns = [module.wildcard_cert.acm_certificate_arn]
-
-  #     forward = {
-  #       target_group_key = "ex-instance"
-  #     }
-
   #     rules = {
   #       ex-cognito = {
   #         actions = [
@@ -216,14 +222,12 @@ module "alb" {
   #             target_group_key = "ex-instance"
   #           }
   #         ]
-
   #         conditions = [{
   #           path_pattern = {
   #             values = ["/some/auth/required/route"]
   #           }
   #         }]
   #       }
-
   #       ex-fixed-response = {
   #         priority = 3
   #         actions = [{
@@ -232,7 +236,6 @@ module "alb" {
   #           status_code  = 200
   #           message_body = "This is a fixed response"
   #         }]
-
   #         conditions = [{
   #           http_header = {
   #             http_header_name = "x-Gimme-Fixed-Response"
@@ -240,7 +243,6 @@ module "alb" {
   #           }
   #         }]
   #       }
-
   #       ex-weighted-forward = {
   #         priority = 4
   #         actions = [{
@@ -260,7 +262,6 @@ module "alb" {
   #             duration = 3600
   #           }
   #         }]
-
   #         conditions = [{
   #           query_string = {
   #             key   = "weighted"
@@ -271,7 +272,6 @@ module "alb" {
   #           }
   #         }]
   #       }
-
   #       ex-redirect = {
   #         priority = 5000
   #         actions = [{
@@ -282,7 +282,6 @@ module "alb" {
   #           query       = "v=dQw4w9WgXcQ"
   #           protocol    = "HTTPS"
   #         }]
-
   #         conditions = [{
   #           query_string = {
   #             key   = "video"
@@ -291,13 +290,10 @@ module "alb" {
   #         }]
   #       }
   #     }
-  #   }
-
   #   ex-cognito = {
   #     port            = 444
   #     protocol        = "HTTPS"
   #     certificate_arn = module.acm.acm_certificate_arn
-
   #     authenticate_cognito = {
   #       authentication_request_extra_params = {
   #         display = "page"
@@ -310,15 +306,12 @@ module "alb" {
   #       user_pool_client_id        = aws_cognito_user_pool_client.this.id
   #       user_pool_domain           = aws_cognito_user_pool_domain.this.domain
   #     }
-
   #     forward = {
   #       target_group_key = "ex-instance"
   #     }
-
   #     rules = {
   #       ex-oidc = {
   #         priority = 2
-
   #         actions = [
   #           {
   #             type = "authenticate-oidc"
@@ -338,7 +331,6 @@ module "alb" {
   #             target_group_key = "ex-lambda-with-trigger"
   #           }
   #         ]
-
   #         conditions = [{
   #           host_header = {
   #             values = ["foobar.com"]
@@ -347,7 +339,6 @@ module "alb" {
   #       }
   #     }
   #   }
-
   #   ex-oidc = {
   #     port            = 445
   #     protocol        = "HTTPS"
@@ -365,24 +356,11 @@ module "alb" {
   #       token_endpoint         = "https://${var.domain_name}/token"
   #       user_info_endpoint     = "https://${var.domain_name}/user_info"
   #     }
-
   #     forward = {
   #       target_group_key = "ex-instance"
   #     }
   #   }
   # }
-
-  # target_groups = {
-  #   ex-instance = {
-  #     name_prefix                       = "h1"
-  #     protocol                          = "HTTP"
-  #     port                              = 80
-  #     target_type                       = "instance"
-  #     deregistration_delay              = 10
-  #     load_balancing_algorithm_type     = "weighted_random"
-  #     load_balancing_anomaly_mitigation = "on"
-  #     load_balancing_cross_zone_enabled = false
-
   #     target_group_health = {
   #       dns_failover = {
   #         minimum_healthy_targets_count = 2
@@ -391,7 +369,6 @@ module "alb" {
   #         minimum_healthy_targets_percentage = 50
   #       }
   #     }
-
   #     health_check = {
   #       enabled             = true
   #       interval            = 30
@@ -402,23 +379,13 @@ module "alb" {
   #       timeout             = 6
   #       protocol            = "HTTP"
   #       matcher             = "200-399"
-  #     }
-
-  #     protocol_version = "HTTP1"
-  #     target_id        = aws_instance.this.id
-  #     port             = 80
-  #     tags = {
-  #       InstanceTargetGroupTag = "baz"
-  #     }
-  #   }
-
+  #     }	 
   #   ex-lambda-with-trigger = {
   #     name_prefix                        = "l1-"
   #     target_type                        = "lambda"
   #     lambda_multi_value_headers_enabled = true
   #     target_id                          = module.lambda_with_allowed_triggers.lambda_function_arn
   #   }
-
   #   ex-lambda-without-trigger = {
   #     name_prefix              = "l2-"
   #     target_type              = "lambda"
@@ -426,7 +393,6 @@ module "alb" {
   #     attach_lambda_permission = true
   #   }
   # }
-
   # additional_target_group_attachments = {
   #   ex-instance-other = {
   #     target_group_key = "ex-instance"
@@ -435,7 +401,6 @@ module "alb" {
   #     port             = "80"
   #   }
   # }
-
   # # Route53 Record(s)
   # route53_records = {
   #   A = {
@@ -450,8 +415,6 @@ module "alb" {
   #   }
   # }
 
-  tags = local.tags
-}
 
 #module "alb_disabled" {
 #  source = "../../"#
@@ -538,18 +501,6 @@ module "alb" {
 #   tags = local.tags
 # }
 
-# data "aws_route53_zone" "this" {
-#   name = var.domain_name
-# }
-
-# module "acm" {
-#   source  = "terraform-aws-modules/acm/aws"
-#   version = "~> 4.0"
-
-#   domain_name = var.domain_name
-#   zone_id     = data.aws_route53_zone.this.id
-# }
-
 # module "wildcard_cert" {
 #   source  = "terraform-aws-modules/acm/aws"
 #   version = "~> 4.0"
@@ -621,7 +572,28 @@ module "alb" {
 
 #   attach_deny_insecure_transport_policy = true
 #   attach_require_latest_tls_policy      = true
-
 #   tags = local.tags
-# }
+#}
 
+
+resource "aws_route53_zone" "primary" {
+   name = var.domain_name
+}
+
+module "acm" {
+  source  = "terraform-aws-modules/acm/aws"
+  version = "~> 4.0"
+  domain_name = var.domain_name
+  zone_id     = aws_route53_zone.primary.zone_id
+}
+
+output zone_id {
+  value = aws_route53_zone.primary.zone_id
+}
+
+output zone {
+  value = aws_route53_zone.primary
+}
+output alb_target_group {
+  value = module.alb  
+}
