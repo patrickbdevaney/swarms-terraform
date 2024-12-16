@@ -1,7 +1,7 @@
 #   variable "provider_alias" {
 #     type = any
 #   }
-
+variable  security_group_id    {} #   = local.name
 variable  name    {} #   = local.name
 variable  domain_name    {} #   = local.name
 variable  vpc_id  {}  #= module.vpc.vpc_id
@@ -37,28 +37,30 @@ module "alb" {
   enable_deletion_protection = false
 
   # Security Group
-  security_group_ingress_rules = {
-    all_http = {
-      from_port   = 80
-      to_port     = 80      
-      ip_protocol = "tcp"
-      description = "HTTP web traffic"
-      cidr_ipv4   = "0.0.0.0/0"
-    }
-    all_https = {
-      from_port   = 443
-      to_port     = 443
-      ip_protocol = "tcp"
-      description = "HTTPS web traffic"
-      cidr_ipv4   = "0.0.0.0/0"
-    }
-  }
-  security_group_egress_rules = {
-    all = {
-      ip_protocol = "-1"
-      cidr_ipv4   = "0.0.0.0/32" #module.vpc.vpc_cidr_block
-    }
-  }
+  # security_group_ingress_rules = {
+  #   all_http = {
+  #     from_port   = 80
+  #     to_port     = 80      
+  #     ip_protocol = "tcp"
+  #     description = "HTTP web traffic"
+  #     cidr_ipv4   = "0.0.0.0/0"
+  #   }
+  #   all_https = {
+  #     from_port   = 443
+  #     to_port     = 443
+  #     ip_protocol = "tcp"
+  #     description = "HTTPS web traffic"
+  #     cidr_ipv4   = "0.0.0.0/0"
+  #   }
+  # }
+  # security_group_egress_rules = {
+  #   all = {
+  #     ip_protocol = "-1"
+  #     cidr_ipv4   = "0.0.0.0/32" #module.vpc.vpc_cidr_block
+  #   }
+  # }
+  create_security_group=false
+  security_groups = [var.security_group_id]
   client_keep_alive = 7200
   target_groups = {
     # ex-swarms-instance = {
@@ -569,8 +571,23 @@ module "alb" {
 resource "aws_route53_zone" "primary" {
    name = var.domain_name
 }
+data "cloudflare_zone" "zone" {
+  #type   = "full"
+  name   = "introspector.meme"
+  account_id = "0ceffbadd0a04623896f5317a1e40d94"
+}
+resource "cloudflare_record" "aws-ns-record" {
+  count = "${length(aws_route53_zone.primary.name_servers)}"
+  #domain = "${var.domain_name}"
+  name   = var.domain_name
+  zone_id = data.cloudflare_zone.zone.id
+  content = "${element(aws_route53_zone.primary.name_servers, count.index)}"
+  type     = "NS"
+  priority = 1
+}
 
 module "acm" {
+#  count = 0
   source  = "terraform-aws-modules/acm/aws"
   version = "~> 4.0"
   domain_name = var.domain_name

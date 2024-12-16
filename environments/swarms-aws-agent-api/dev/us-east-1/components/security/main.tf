@@ -18,8 +18,8 @@ module "asg_sg" {
   source  = "terraform-aws-modules/security-group/aws"
   version = "~> 5.0"
 
-  name        = local.name
-  description = "A security group"
+  name        = "${local.name}-external"
+  description = "external group"
   vpc_id      = var.vpc_id
 
   ingress_cidr_blocks = ["0.0.0.0/0"]
@@ -38,7 +38,7 @@ module "asg_sg_internal" {
   source  = "terraform-aws-modules/security-group/aws"
   version = "~> 5.0"
 
-  name        = local.name
+  name        = "${local.name}-internal"
   description = "An internal security group"
   vpc_id      = var.vpc_id
   # see ~/2024/12/13/terraform-aws-security-group/examples/complete/main.tf
