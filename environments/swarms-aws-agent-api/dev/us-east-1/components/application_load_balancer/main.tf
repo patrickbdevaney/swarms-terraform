@@ -772,7 +772,7 @@ output zone {
   value = aws_route53_zone.primary
 }
 output alb_target_group {
-  value = module.alb  
+  value = aws_lb_target_group.this.arn
 }
 
 
