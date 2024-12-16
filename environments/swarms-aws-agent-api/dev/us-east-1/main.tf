@@ -58,6 +58,7 @@ module "lt_dynamic" {
 module "alb" { 
   source = "./components/application_load_balancer"
   domain_name = local.domain
+  security_group_id   = module.security.security_group_id # allowed to talk to internal
   public_subnets = [
     local.ec2_public_subnet_id_1,
     local.ec2_public_subnet_id_2 ] 
@@ -68,7 +69,7 @@ module "alb" {
 module "asg_dynamic" {
   for_each = toset(var.instance_types)
   source              = "./components/autoscaling_group"
-  security_group_id   = module.security.security_group_id
+  security_group_id   = module.security.internal_security_group_id
   instance_type       = each.key
   name       = "swarms-size-${each.key}"
   launch_template_id   = module.lt_dynamic[each.key].launch_template_id

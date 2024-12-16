@@ -34,8 +34,7 @@ module "alb" {
   vpc_id  = var.vpc_id # module.vpc.vpc_id
   subnets = var.public_subnets # module.vpc.public_subnets
 
-  # For example only
-  #enable_deletion_protection = false
+  enable_deletion_protection = false
 
   # Security Group
   security_group_ingress_rules = {
