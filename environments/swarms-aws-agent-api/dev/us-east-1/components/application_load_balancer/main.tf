@@ -55,21 +55,6 @@ resource "aws_route53_record" "api-cname" {
   ]
 }
 
-data "cloudflare_zone" "zone" {
-  #type   = "full"
-  name   = "introspector.meme"
-  account_id = "0ceffbadd0a04623896f5317a1e40d94"
-}
-
-resource "cloudflare_record" "aws-ns-record" {
-  count = "${length(aws_route53_zone.primary.name_servers)}"
-  #domain = "${var.domain_name}"
-  name   = var.domain_name
-  zone_id = data.cloudflare_zone.zone.id
-  content = "${element(aws_route53_zone.primary.name_servers, count.index)}"
-  type     = "NS"
-  priority = 1
-}
 
 module "acm" {
 #  count = 0

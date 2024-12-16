@@ -1,16 +1,34 @@
+variable domain {}
 locals {
   #  instance_type = "t3.large"
   #  instance_type = "t3.medium"
-  ami = "ami-0e2c8caa4b6378d8c"
+  #ami = "ami-0e2c8caa4b6378d8c"
+  ami_name = "ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-*"
   name   = "swarms"
-  region = "us-east-1"
-  domain = "api.introspector.meme"
-  ec2_public_subnet_id_1 = "subnet-057c90cfe7b2e5646" # swarms-public-us-east-1a
-  ec2_public_subnet_id_2 = "subnet-05d8aef1f71b5fe22" # b
-  vpc_id = "vpc-04f28c9347af48b55"
+  region = "us-east-2"
+  domain = var.domain
   tags = {
     project="swarms"
   }
+}
+
+data "aws_ami" "ami" {
+  most_recent      = true
+  name_regex       = "^${local.ami_name}"
+}
+
+locals {
+  ami_id  = data.aws_ami.ami.id
+}
+
+module "vpc" {
+  source = "./components/vpc"
+}
+
+locals {
+  ec2_public_subnet_id_1 = module.vpc.ec2_public_subnet_id_1
+  ec2_public_subnet_id_2 = module.vpc.ec2_public_subnet_id_2
+  vpc_id = module.vpc.vpc_id
 }
 
 module "security" {

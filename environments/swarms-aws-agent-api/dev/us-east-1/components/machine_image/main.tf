@@ -1,6 +1,3 @@
-provider "aws" {
-  region = "us-east-1"
-}
 
 locals {
   ami = "ami-0e2c8caa4b6378d8c"
