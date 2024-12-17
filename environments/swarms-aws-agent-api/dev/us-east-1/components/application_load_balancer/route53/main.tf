@@ -31,6 +31,6 @@ output cname {
 output zone {
   value = data.aws_route53_zone.primary
 }
-output zone_id {
+output primary_zone_id {
   value = data.aws_route53_zone.primary.zone_id
 }

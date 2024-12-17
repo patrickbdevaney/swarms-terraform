@@ -1,7 +1,7 @@
 variable  vpc_id  {}
 variable  security_group_id    {} #   = local.name
 variable  name    {} #   = local.name
-variable  domain_name    {} #   = local.name
+variable  domain_name  {}
 variable  public_subnets {} #= module.vpc.public_subnets
 
 data "aws_availability_zones" "available" {}
@@ -50,6 +50,16 @@ module "route53" {
 module "tg" {
   source = "./target_group/"
   vpc_id  = var.vpc_id # module.vpc.vpc_id
+}
+
+module "https" {
+  source = "./https/"
+  #  vpc_id  = var.vpc_id # module.vpc.vpc_id
+  zone_id     = module.route53.primary_zone_id
+  domain_name = var.domain_name
+  alb_arn = module.alb.arn
+  aws_lb_target_group_arn = module.tg.alb_target_group_arn
+  #aws_lb_target_group.this.arn
 }
 
 
