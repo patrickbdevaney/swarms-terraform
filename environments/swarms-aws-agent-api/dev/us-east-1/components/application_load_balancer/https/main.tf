@@ -9,6 +9,7 @@ module "acm" {
   version = "~> 4.0"
   domain_name = var.domain_name
   zone_id     = var.zone_id
+  wait_for_validation = false
   subject_alternative_names = [
     "*.${var.domain_name}"
   ]
@@ -16,6 +17,7 @@ module "acm" {
 
 ## now we just lift the listener code
 resource "aws_lb_listener" "this" {
+  count = 0
   port                        = 443
   protocol                    = "HTTPS"
   ssl_policy                  = "ELBSecurityPolicy-TLS13-1-2-Res-2021-06"
@@ -31,6 +33,16 @@ resource "aws_lb_listener" "this" {
     target_group_arn =var.aws_lb_target_group_arn
     #module.alb.target_groups["ex-lambda-with-trigger"].arn
     #length(try(default_action.value.target_groups, [])) > 0 ? null : try(default_action.value.arn, aws_lb_target_group.this[default_action.value.target_group_key].arn, null)
+    type             = "forward"
+  }
+}
+
+resource "aws_lb_listener" "insecure" {
+  port                        = 80
+  protocol                    = "HTTP"
+  load_balancer_arn = var.alb_arn
+  default_action {
+    target_group_arn =var.aws_lb_target_group_arn
     type             = "forward"
   }
 }
