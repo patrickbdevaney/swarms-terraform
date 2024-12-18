@@ -16,9 +16,8 @@ variable name {}
 
 
 locals {
-#  ami_id  = data.aws_ami.ami.id
   ami_id  = var.ami_id
-  
+  new_ami_id = "ami-08093b6770af41b14" # environments/swarms-aws-agent-api/dev/us-east-1/components/machine_image/Readme.md
 }
 
 # SLOW
@@ -142,6 +141,22 @@ module "asg_dynamic" {
 #  security_group_id   = module.security.internal_security_group_id
   instance_type       = each.key
   name       = "swarms-size-${each.key}"
+  launch_template_id   = module.lt_dynamic[each.key].launch_template_id
+  target_group_arn = module.alb.alb_target_group_arn
+}
+
+module "asg_dynamic_new_ami" {
+  # built with packer
+  tags = local.tags
+  vpc_id = local.vpc_id
+  image_id = local.new_ami_id
+  ec2_subnet_id = module.vpc.ec2_public_subnet_id_1
+  for_each = toset(var.instance_types)
+  aws_iam_instance_profile_ssm_arn = aws_iam_instance_profile.ssm.arn
+  source              = "./components/autoscaling_group"
+#  security_group_id   = module.security.internal_security_group_id
+  instance_type       = each.key
+  name       = "swarms-ami-${each.key}"
   launch_template_id   = module.lt_dynamic[each.key].launch_template_id
   target_group_arn = module.alb.alb_target_group_arn
 }
