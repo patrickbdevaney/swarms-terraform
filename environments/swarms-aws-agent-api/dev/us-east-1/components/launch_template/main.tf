@@ -64,6 +64,7 @@ resource "aws_launch_template" "ec2_launch_template" {
   export BRANCH=feature/ec2
   git stash
   git checkout --force $BRANCH
+  git pull # get the latest version
   bash -x ${var.install_script}
   EOF
     )

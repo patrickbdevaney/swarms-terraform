@@ -93,9 +93,9 @@ module "lt_dynamic_ami" {
   vpc_id = local.vpc_id
   for_each = toset(var.instance_types)
   instance_type       = each.key
-  name       = "swarms-size-${each.key}"
+  name       = "swarms-ami-${each.key}"
   security_group_id = module.security.internal_security_group_id
-  ami_id = var.ami_id
+  ami_id = local.new_ami_id
   tags= local.tags
   source = "./components/launch_template"
   iam_instance_profile_name = module.roles.ssm_profile_name
