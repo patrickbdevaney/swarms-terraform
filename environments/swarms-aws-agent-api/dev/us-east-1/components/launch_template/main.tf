@@ -1,3 +1,4 @@
+variable install_script {}
 variable iam_instance_profile_name {}
 variable security_group_id {}
 variable name {}
@@ -63,7 +64,7 @@ resource "aws_launch_template" "ec2_launch_template" {
   export BRANCH=feature/ec2
   git stash
   git checkout --force $BRANCH
-  bash -x /opt/swarms/api/install.sh
+  bash -x ${var.install_script}
   EOF
     )
   tags = var.tags  

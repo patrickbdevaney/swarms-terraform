@@ -86,6 +86,21 @@ module "lt_dynamic" {
   source = "./components/launch_template"
   iam_instance_profile_name = module.roles.ssm_profile_name
   #aws_iam_instance_profile.ssm.name
+  install_script = "/opt/swarms/api/install.sh"
+}
+
+module "lt_dynamic_ami" {
+  vpc_id = local.vpc_id
+  for_each = toset(var.instance_types)
+  instance_type       = each.key
+  name       = "swarms-size-${each.key}"
+  security_group_id = module.security.internal_security_group_id
+  ami_id = var.ami_id
+  tags= local.tags
+  source = "./components/launch_template"
+  iam_instance_profile_name = module.roles.ssm_profile_name
+  #aws_iam_instance_profile.ssm.name
+  install_script = "/opt/swarms/api/just_run.sh"
 }
 
 output security_group_id {
@@ -128,19 +143,19 @@ module "asg_dynamic" {
   target_group_arn = module.alb.alb_target_group_arn
 }
 
-# module "asg_dynamic_new_ami" {
-#   # built with packer
-#   #count =0
-#   tags = local.tags
-#   vpc_id = local.vpc_id
-#   image_id = local.new_ami_id
-#   ec2_subnet_id = module.vpc.ec2_public_subnet_id_1
-#   for_each = toset(var.instance_types)
-#   aws_iam_instance_profile_ssm_arn = module.roles.ssm_profile_arn  
-#   source              = "./components/autoscaling_group"
-# #  security_group_id   = module.security.internal_security_group_id
-#   instance_type       = each.key
-#   name       = "swarms-ami-${each.key}"
-#   launch_template_id   = module.lt_dynamic[each.key].launch_template_id
-#   target_group_arn = module.alb.alb_target_group_arn
-# }
+module "asg_dynamic_new_ami" {
+  # built with packer
+  #count =0
+  tags = local.tags
+  vpc_id = local.vpc_id
+  image_id = local.new_ami_id
+  ec2_subnet_id = module.vpc.ec2_public_subnet_id_1
+  for_each = toset(var.instance_types)
+  aws_iam_instance_profile_ssm_arn = module.roles.ssm_profile_arn  
+  source              = "./components/autoscaling_group"
+#  security_group_id   = module.security.internal_security_group_id
+  instance_type       = each.key
+  name       = "swarms-ami-${each.key}"
+  launch_template_id   = module.lt_dynamic_ami[each.key].launch_template_id
+  target_group_arn = module.alb.alb_target_group_arn
+}

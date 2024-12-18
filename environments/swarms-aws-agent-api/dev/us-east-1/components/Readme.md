@@ -25,4 +25,4 @@ https://github.com/cloudposse/terraform-aws-ssm-iam-role.git
 8. create user home directories for different agent
 9. look at  natgw alternatives
 that costs money https://aws.amazon.com/vpc/pricing/
-
+10. check in copy of swagger
