@@ -13,7 +13,12 @@ source "amazon-ebs" "ubuntu" {
   region        = "us-east-2"
   source_ami    = "ami-0325b9a2dfb474b2d" # Ubuntu 20.04 LTS
   ssh_username  = "ubuntu"
-  
+  launch_block_device_mappings {
+    device_name = "/dev/sda1"
+    volume_size = 30
+    volume_type = "gp3"
+    delete_on_termination = true
+  }  
 }
 
 build {
