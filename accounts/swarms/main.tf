@@ -96,3 +96,8 @@ module github {
 
 }
 
+
+# now create the ssm document
+module call_swarms {
+  source = "../../environments/call-swarms"
+}
