@@ -65,4 +65,66 @@ module "autoscaling" {
     }
   }
 
+    # Target scaling policy schedule based on average CPU load
+  scaling_policies = {
+    avg-cpu-policy-greater-than-50 = {
+      policy_type               = "TargetTrackingScaling"
+      estimated_instance_warmup = 1200
+      target_tracking_configuration = {
+        predefined_metric_specification = {
+          predefined_metric_type = "ASGAverageCPUUtilization"
+        }
+        target_value = 50.0
+      }
+    },
+    predictive-scaling = {
+      policy_type = "PredictiveScaling"
+      predictive_scaling_configuration = {
+        mode                         = "ForecastAndScale"
+        scheduling_buffer_time       = 10
+        max_capacity_breach_behavior = "IncreaseMaxCapacity"
+        max_capacity_buffer          = 10
+        metric_specification = {
+          target_value = 32
+          predefined_scaling_metric_specification = {
+            predefined_metric_type = "ASGAverageCPUUtilization"
+            resource_label         = "testLabel"
+          }
+          predefined_load_metric_specification = {
+            predefined_metric_type = "ASGTotalCPUUtilization"
+            resource_label         = "testLabel"
+          }
+        }
+      }
+    }
+    # request-count-per-target = {
+    #   policy_type               = "TargetTrackingScaling"
+    #   estimated_instance_warmup = 120
+    #   target_tracking_configuration = {
+    #     predefined_metric_specification = {
+    #       predefined_metric_type = "ALBRequestCountPerTarget"
+    #       resource_label         = "swarms1"
+    # 	  #"${module.alb.arn_suffix}/${module.alb.target_groups["ex_asg"].arn_suffix}"
+    #     }
+    #     target_value = 800
+    #   }
+    # }
+    scale-out = {
+      name                      = "scale-out"
+      adjustment_type           = "ExactCapacity"
+      policy_type               = "StepScaling"
+      estimated_instance_warmup = 120
+      step_adjustment = [
+        {
+          scaling_adjustment          = 1
+          metric_interval_lower_bound = 0
+          metric_interval_upper_bound = 10
+        },
+        {
+          scaling_adjustment          = 2
+          metric_interval_lower_bound = 10
+        }
+      ]
+    }
+  }
 }
