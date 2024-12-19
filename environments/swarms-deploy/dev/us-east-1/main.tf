@@ -98,7 +98,7 @@ module "lt_dynamic" {
   source = "./components/launch_template"
   iam_instance_profile_name = var.ssm_profile_name
   #aws_iam_instance_profile.ssm.name
-  install_script = "/opt/swarms/api/install.sh"
+  install_script = "/opt/swarms/install.sh"
 }
 
 # module "lt_dynamic_ami" {
