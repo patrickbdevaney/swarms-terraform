@@ -53,44 +53,44 @@ resource "aws_ssm_document" "deploy" {
 # To deploy an IAM policy for the `github` role that allows the `ssm:SendCommand` operation, you can use Terraform. Below is a sample Terraform code snippet to create the IAM policy and attach it to the `github` role:
 
 # ```hcl
-provider "aws" {
-  region = "us-east-1"  # Change to your desired region
-}
-resource "aws_iam_policy" "github_ssm_policy" {
-  name        = "GitHubSSMPolicy"
-  description = "Policy to allow SSM commands for GitHub role"
+# provider "aws" {
+#   region = "us-east-1"  # Change to your desired region
+# }
+# resource "aws_iam_policy" "github_ssm_policy" {
+#   name        = "GitHubSSMPolicy"
+#   description = "Policy to allow SSM commands for GitHub role"
   
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Effect = "Allow",
-        Action = [
-          "ssm:SendCommand",
-          "ssm:ListCommands",
-          "ssm:GetCommandInvocation"
-        ],
-        Resource = "*"
-      },
-      {
-        Effect = "Allow",
-        Action = [
-          "ec2:DescribeInstances"
-        ],
-        Resource = "*"
-      }
-    ]
-  })
-}
+#   policy = jsonencode({
+#     Version = "2012-10-17",
+#     Statement = [
+#       {
+#         Effect = "Allow",
+#         Action = [
+#           "ssm:SendCommand",
+#           "ssm:ListCommands",
+#           "ssm:GetCommandInvocation"
+#         ],
+#         Resource = "*"
+#       },
+#       {
+#         Effect = "Allow",
+#         Action = [
+#           "ec2:DescribeInstances"
+#         ],
+#         Resource = "*"
+#       }
+#     ]
+#   })
+# }
 
-resource "aws_iam_role_policy_attachment" "attach_github_ssm_policy" {
-  policy_arn = aws_iam_policy.github_ssm_policy.arn
-  role       = "github"  # Ensure this matches your IAM role
-}
+# resource "aws_iam_role_policy_attachment" "attach_github_ssm_policy" {
+#   policy_arn = aws_iam_policy.github_ssm_policy.arn
+#   role       = "github"  # Ensure this matches your IAM role
+# }
 
-output "policy_arn" {
-  value = aws_iam_policy.github_ssm_policy.arn
-}
+# output "policy_arn" {
+#   value = aws_iam_policy.github_ssm_policy.arn
+# }
 # ```
 
 # ### Instructions:
