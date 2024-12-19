@@ -48,11 +48,9 @@ resource "aws_lb_listener_rule" "route_v1_api" {
 }
 
 
-To check for `?customer=name` in the rules instead of the path, modify the condition as follows:
-
-resource "aws_lb_listener_rule" "route_v1_api" {
+resource "aws_lb_listener_rule" "route_v1_api_customer" {
   listener_arn = aws_lb_listener.this.arn
-  priority     = 100  # Set priority as needed, must be unique
+  priority     = 200  # Set priority as needed, must be unique
 
   action {
     type             = "forward"
@@ -60,8 +58,10 @@ resource "aws_lb_listener_rule" "route_v1_api" {
   }
 
   condition {
-    field  = "query-string"
-    values = ["customer=test"]
+    query_string {
+      key = "customer"
+      value ="test"
+    }
   }
 }
 
