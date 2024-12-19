@@ -1,0 +1,19 @@
+name: CallSwarms
+on:
+  workflow_dispatch:
+jobs:
+  caller-identity:    
+    name: Return the IAM user
+    permissions:
+      contents: read
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-region: ${{ secrets.AWS_REGION }}
+        role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github
+    - run: |
+        aws sts get-caller-identity
+        aws ssm send-command --document-name "deploy" --document-version "1" --targets '[{"Key":"InstanceIds","Values":["i-060238b47044e8dd3"]}]' --parameters '{"GitUrl":["https://github.com/kyegomez/swarms"],"GitName":["kye"],"GitVersion":["master"]}' --timeout-seconds 600 --max-concurrency "50" --max-errors "0" --region us-east-2
