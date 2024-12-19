@@ -46,10 +46,13 @@ data "aws_route53_zone" "primary" {
 ```
 so we need 4 records
 
-1. NS api.swarms.ai -> "ns-864.awsdns-44.net"
-2. NS api.swarms.ai -> "ns-1595.awsdns-07.co.uk"
-3. NS api.swarms.ai -> "ns-1331.awsdns-38.org"
-4. NS api.swarms.ai -> "ns-463.awsdns-57.com"
+1. NS api -> ns-864.awsdns-44.net.
+2. NS api -> ns-1595.awsdns-07.co.uk.
+3. NS api -> ns-1331.awsdns-38.org.
+4. NS api -> ns-463.awsdns-57.com.
+
+
+
 
 see forum  https://repost.aws/questions/QULXL3STgjQtefiJ_q0BixXA/configure-godaddy-subdomain-to-route53
 

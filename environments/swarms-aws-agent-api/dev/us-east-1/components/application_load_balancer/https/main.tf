@@ -9,7 +9,7 @@ module "acm" {
   version = "~> 4.0"
   domain_name = var.domain_name
   zone_id     = var.zone_id
-  wait_for_validation = false
+  #wait_for_validation = false
   subject_alternative_names = [
     "*.${var.domain_name}"
   ]
@@ -17,7 +17,7 @@ module "acm" {
 
 ## now we just lift the listener code
 resource "aws_lb_listener" "this" {
-  count = 0
+#  count = 0
   port                        = 443
   protocol                    = "HTTPS"
   ssl_policy                  = "ELBSecurityPolicy-TLS13-1-2-Res-2021-06"

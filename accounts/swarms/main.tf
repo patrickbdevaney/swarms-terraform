@@ -1,10 +1,15 @@
 locals {
   #ami_name = "ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-*"
   ami_name  = "ubuntu-minimal/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-minimal-*"
-  dns = "api.swarms.ai"
+  #  dns = "api.swarms.ai"
+  dns = "api.arianakrasniqi.com"
   account = "916723593639"
   region  = "us-east-2"
 }
+
+#resource aws_route53_zone test{
+#  name = local.dns
+#}
 
 provider aws {
   region = "us-east-2"
