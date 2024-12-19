@@ -44,6 +44,16 @@ module "swarms_api" {
   
 }
 
+module "swarmdeploy" {
+  source = "../../environments/swarms-deploy/dev/us-east-1"
+  domain = local.dns
+  ami_id = data.aws_ami.ami.id
+  name = "swarmdeploy"
+  tags = {project="swarmdeploy"}  
+  vpc_id = "vpc-0b4cedd083227068d"
+  subnet_id = "subnet-04b3bdd4b0dc877f0"
+}
+
 output api {
   value = module.swarms_api
 }
