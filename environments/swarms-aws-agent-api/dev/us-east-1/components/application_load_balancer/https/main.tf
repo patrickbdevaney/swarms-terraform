@@ -30,6 +30,7 @@ resource "aws_lb_listener" "this" {
   }
 }
 
+# make a new one for checking for ?customer=name in the rules instead of the path
 resource "aws_lb_listener_rule" "route_v1_api" {
   listener_arn = aws_lb_listener.this.arn
   priority     = 100  # Set priority as needed, must be unique
@@ -43,6 +44,24 @@ resource "aws_lb_listener_rule" "route_v1_api" {
     path_pattern {
       values = ["/v1/*/*/*"]
     }
+  }
+}
+
+
+To check for `?customer=name` in the rules instead of the path, modify the condition as follows:
+
+resource "aws_lb_listener_rule" "route_v1_api" {
+  listener_arn = aws_lb_listener.this.arn
+  priority     = 100  # Set priority as needed, must be unique
+
+  action {
+    type             = "forward"
+    target_group_arn = var.new_target_group_arn  # New target group's ARN
+  }
+
+  condition {
+    field  = "query-string"
+    values = ["customer=test"]
   }
 }
 
