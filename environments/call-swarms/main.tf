@@ -56,7 +56,6 @@ resource "aws_ssm_document" "deploy" {
 provider "aws" {
   region = "us-east-1"  # Change to your desired region
 }
-
 resource "aws_iam_policy" "github_ssm_policy" {
   name        = "GitHubSSMPolicy"
   description = "Policy to allow SSM commands for GitHub role"
@@ -95,6 +94,7 @@ output "policy_arn" {
 # ```
 
 # ### Instructions:
+
 
 # 1. **Install Terraform** if you haven't already.
 # 2. **Configure AWS Credentials**: Ensure your AWS credentials are set up properly (e.g., using `aws configure`).
