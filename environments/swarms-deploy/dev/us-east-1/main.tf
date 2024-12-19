@@ -1,3 +1,5 @@
+variable "ssm_profile_arn" {}
+variable "ssm_profile_name" {}
 variable vpc_id {}
 variable subnet_id {}
 locals {
@@ -48,9 +50,9 @@ module "security" {
   name = local.name
 }
 
-module "kp" {
-  source = "${local.root}/keypairs"
-}
+#module "kp" {
+#  source = "${local.root}/keypairs"
+#}
 
 # module "lt" {
 #   instance_type = local.instance_type
@@ -79,11 +81,11 @@ variable "instance_types" {
   ]
 }
 
-module "roles" {
-  source = "${local.root}/roles"
-  
-  tags = local.tags 
-}
+#module "roles" {
+#  source = "${local.root}/roles"
+#  
+#  tags = local.tags 
+#}
 
 module "lt_dynamic" {
   vpc_id = local.vpc_id
@@ -94,7 +96,7 @@ module "lt_dynamic" {
   ami_id = var.ami_id
   tags= local.tags
   source = "./components/launch_template"
-  iam_instance_profile_name = module.roles.ssm_profile_name
+  iam_instance_profile_name = var.ssm_profile_name
   #aws_iam_instance_profile.ssm.name
   install_script = "/opt/swarms/api/install.sh"
 }
@@ -142,7 +144,7 @@ module "asg_dynamic" {
   image_id = local.ami_id
   ec2_subnet_id = var.subnet_id
   for_each = toset(var.instance_types)
-  aws_iam_instance_profile_ssm_arn = module.roles.ssm_profile_arn
+  aws_iam_instance_profile_ssm_arn = var.ssm_profile_arn
   #iam_instance_profile_name = module.roles.ssm_profile_name
   source              = "./components/autoscaling_group"
   #  security_group_id   = module.security.internal_security_group_id
