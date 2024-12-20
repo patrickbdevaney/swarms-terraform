@@ -1,4 +1,6 @@
 on:
+  workflow_dispatch:
+
   push:
     branches:
       - "feature/call_swarms"
@@ -9,8 +11,6 @@ on:
       - ".github/workflows/call-swarms.yaml"
 
 name: CallSwarms
-on:
-  workflow_dispatch:
 jobs:
   caller-identity:    
     name: Return the IAM user
