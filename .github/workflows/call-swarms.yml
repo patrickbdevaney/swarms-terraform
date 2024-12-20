@@ -1,15 +1,12 @@
-# create iam policy to allow this to execute
-
-## ERROR:
-# Run aws sts get-caller-identity
-# {
-#     "UserId": "AROA5K4H36GT5YYCJUOGV:GitHubActions",
-#     "Account": "***",
-#     "Arn": "arn:aws:sts::***:assumed-role/github/GitHubActions"
-# }
-
-# An error occurred (AccessDeniedException) when calling the SendCommand operation: User: arn:aws:sts::***:assumed-role/github/GitHubActions is not authorized to perform: ssm:SendCommand on resource: arn:aws:ec2:***:***:instance/i-060238b47044e8dd3 because no identity-based policy allows the ssm:SendCommand action
-# Error: Process completed with exit code 254.
+on:
+  push:
+    branches:
+      - "feature/call_swarms"
+  pull_request:
+    branches:
+      - "main" 
+    paths:
+      - ".github/workflows/call-swarms.yaml"
 
 name: CallSwarms
 on:
@@ -27,7 +24,7 @@ jobs:
       with:
         aws-region: ${{ secrets.AWS_REGION }}
         role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github
+    - uses: actions/checkout@v2
     - run: |
-        aws sts get-caller-identity
-        aws ssm send-command --document-name "deploy" --document-version "2" --targets '[{"Key":"InstanceIds","Values":["i-060238b47044e8dd3"]}]' --parameters '{"GitUrl":["https://github.com/kyegomez/swarms"],"GitName":["kye"],"GitVersion":["master"]}' --timeout-seconds 600 --max-concurrency "50" --max-errors "0" --region us-east-2
-
+          chmod +x ./actions/call_swarms.sh
+         ./actions/call_swarms.sh
