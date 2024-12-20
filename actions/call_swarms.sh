@@ -3,7 +3,8 @@ set -e
 set -x
 # Constants
 export REGION="${REGION:-us-east-2}"
-export AWS_PROFILE="${AWS_PROFILE:-swarms}"
+#export AWS_PROFILE="${AWS_PROFILE:-swarms}"
+#export AWS_PROFILE="${AWS_PROFILE}" only needed for testing locally
 TAG_KEY="${TAG_KEY:-sandbox}"
 TAG_VALUE="${TAG_VALUE:-kye}"
 GIT_URL="${GIT_URL:-https://github.com/kyegomez/swarms}"
