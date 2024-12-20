@@ -25,6 +25,4 @@ jobs:
         aws-region: ${{ secrets.AWS_REGION }}
         role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github
     - uses: actions/checkout@v2
-    - run: |
-          chmod +x ./actions/call_swarms.sh
-         ./actions/call_swarms.sh
+    - run: bash -x -e      ./actions/call_swarms.sh
