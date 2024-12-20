@@ -30,7 +30,8 @@ resource "aws_lb_listener" "this" {
   }
 }
 
-# make a new one for checking for ?customer=name in the rules instead of the path
+
+# make a new one for checking for name is test.api.swarms.ai
 resource "aws_lb_listener_rule" "route_v1_api" {
   listener_arn = aws_lb_listener.this.arn
   priority     = 100  # Set priority as needed, must be unique
@@ -41,26 +42,8 @@ resource "aws_lb_listener_rule" "route_v1_api" {
   }
 
   condition {
-    path_pattern {
-      values = ["/v1/*/*/*"]
-    }
-  }
-}
-
-
-resource "aws_lb_listener_rule" "route_v1_api_customer" {
-  listener_arn = aws_lb_listener.this.arn
-  priority     = 200  # Set priority as needed, must be unique
-
-  action {
-    type             = "forward"
-    target_group_arn = var.new_target_group_arn  # New target group's ARN
-  }
-
-  condition {
-    query_string {
-      key = "customer"
-      value ="test"
+    host_header {
+      values = ["test.api.swarms.ai"]
     }
   }
 }

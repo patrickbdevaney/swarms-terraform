@@ -69,6 +69,7 @@ module "swarms_api" {
 }
 
 module "swarmdeploy" {
+count =0
   source = "../../environments/swarms-deploy/dev/us-east-1"
   domain = local.dns
   #ami_id = data.aws_ami.ami.id
