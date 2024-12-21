@@ -5,8 +5,8 @@ set -x
 export REGION="${REGION:-us-east-2}"
 #export AWS_PROFILE="${AWS_PROFILE:-swarms}"
 #export AWS_PROFILE="${AWS_PROFILE}" only needed for testing locally
-TAG_KEY="${TAG_KEY:-sandbox}"
-TAG_VALUE="${TAG_VALUE:-kye}"
+TAG_KEY="${TAG_KEY:-Name}" 
+TAG_VALUE="${TAG_VALUE:-test-swarms-ami-t3.medium}"
 GIT_URL="${GIT_URL:-https://github.com/kyegomez/swarms}"
 export GIT_NAME="${GIT_NAME:-kye}"
 export GIT_VERSION="${GIT_VERSION:-master}"
@@ -37,7 +37,10 @@ send_command() {
         --timeout-seconds $TIMEOUT_SECONDS \
         --max-concurrency "$MAX_CONCURRENCY" \
         --max-errors "$MAX_ERRORS" \
-        --region $REGION
+        --region $REGION \
+        --output-s3-bucket-name "swarms-session-logs-20241221151754799300000003" \
+	--cloud-watch-output-config '{"CloudWatchOutputEnabled":true,"CloudWatchLogGroupName":"/ssm/session-logs-20241221151803393300000006"}'
+    
 }
 
 # Function to fetch command output

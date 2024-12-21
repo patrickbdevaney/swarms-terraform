@@ -12,6 +12,54 @@ data "aws_iam_policy_document" "default" {
      resources = [ "arn:aws:kms:us-east-2:916723593639:key/cc8e1ee7-a05b-4642-bd81-ba5548635590" ]
      effect    = "Allow"
    }
+
+  {
+    "Effect": "Allow",
+    "Principal": {
+        "Service": "logs.us-east-1.amazonaws.com"
+    },
+    "Action": [
+        "kms:Encrypt*",
+        "kms:Decrypt*",
+        "kms:ReEncrypt*",
+        "kms:GenerateDataKey*",
+        "kms:Describe*"
+    ],
+    "Resource": "*",
+    "Condition": {
+        "ArnLike": {
+            "kms:EncryptionContext:aws:logs:arn": "arn:aws:logs:us-east-1:xxxxx:log-group:SSM"
+        }
+    }
+},    
+{
+    "Effect": "Allow",
+    "Principal": {
+        "Service": "ssm.amazonaws.com"
+    },
+    "Action": [
+        "kms:Encrypt*",
+        "kms:Decrypt*",
+        "kms:ReEncrypt*",
+        "kms:GenerateDataKey*",
+        "kms:Describe*"
+    ],
+    "Resource": "*"            
+}, 
+{
+    "Effect": "Allow",    
+    "Action": [
+        "kms:Encrypt*",
+        "kms:Decrypt*",
+        "kms:ReEncrypt*",
+        "kms:GenerateDataKey*",
+        "kms:Describe*"
+    ],
+    "Resource": "*",
+    "Principal": {
+        "AWS": "arn:aws:iam::xxxxx:role/SSMRole"
+    }      
+}
   
 #  statement {
 #    actions   = ["${var.ssm_actions}"]
