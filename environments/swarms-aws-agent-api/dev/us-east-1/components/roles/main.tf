@@ -28,6 +28,12 @@ data "aws_iam_policy_document" "default" {
     effect    = "Allow"
   }
 
+   statement {
+     actions = ["kms:Decrypt"]
+     resources = [ "arn:aws:kms:us-east-2:916723593639:key/cc8e1ee7-a05b-4642-bd81-ba5548635590" ]
+     effect    = "Allow"
+   }
+  
 #  statement {
 #    actions   = ["${var.ssm_actions}"]
 #    resources = ["${formatlist("arn:aws:ssm:%s:%s:parameter/%s", var.region, var.account_id, var.ssm_parameters)}"]
@@ -51,6 +57,8 @@ resource "aws_iam_role_policy_attachment" "AmazonSSMManagedEC2InstanceDefaultPol
   role       = join("", aws_iam_role.ssm.*.name)
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedEC2InstanceDefaultPolicy"
 }
+
+
 
 
 resource "aws_iam_role_policy_attachment" "default" {
