@@ -114,3 +114,7 @@ module ssm_observer {
   ami_id =  local.us_east_2_ami_id
 }
 
+module ssm_setup {
+  source = "../../modules/aws/ssm/setup"
+}
+
