@@ -80,6 +80,7 @@ module "roles" {
 
 module "lt_dynamic" {
   vpc_id = local.vpc_id
+  branch =  "feature/ec2"
   for_each = toset(var.instance_types)
   instance_type       = each.key
   name       = "swarms-size-${each.key}"
@@ -93,6 +94,7 @@ module "lt_dynamic" {
 }
 
 module "lt_dynamic_ami" {
+  branch =  "feature/cloudwatch"
   vpc_id = local.vpc_id
   for_each = toset(var.instance_types)
   instance_type       = each.key

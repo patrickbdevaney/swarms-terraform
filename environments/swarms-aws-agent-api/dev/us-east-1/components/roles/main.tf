@@ -19,6 +19,9 @@ data "aws_iam_policy_document" "default" {
        "logs:DescribeLogStreams",
        "logs:CreateLogGroup",
        "logs:CreateLogStream",
+       "logs:PutLogEvents",
+       "logs:PutLogEventsBatch",
+       "cloudwatch:PutMetricData",
      ]
      resources = [ "*" ]
      effect    = "Allow"

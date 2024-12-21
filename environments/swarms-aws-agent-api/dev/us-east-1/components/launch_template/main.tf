@@ -1,3 +1,7 @@
+variable branch {
+#  default = "feature/cloudwatch"
+}
+
 variable install_script {}
 variable iam_instance_profile_name {}
 variable security_group_id {}
@@ -23,6 +27,7 @@ data "aws_ssm_parameter" "cw_agent_config" {
   #arn:aws:ssm:us-east-2:916723593639:parameter/cloudwatch-agent/config
   name        = "/cloudwatch-agent/config"
 }
+# defined 
 resource "aws_launch_template" "ec2_launch_template" {
   name_prefix           = "${var.name}-launch-template-"
   image_id              = var.ami_id
@@ -80,7 +85,7 @@ resource "aws_launch_template" "ec2_launch_template" {
     git clone https://github.com/jmikedupont2/swarms "/opt/swarms/"
   fi
   cd "/opt/swarms/" || exit 1
-  export BRANCH=feature/ec2
+  export BRANCH=${var.branch}
   git stash
   git checkout --force $BRANCH
   git pull # get the latest version

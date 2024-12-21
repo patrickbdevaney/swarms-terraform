@@ -31,21 +31,21 @@ provider aws {
   region = "us-east-2"
   profile = "swarms"
 }
-output dns {
-  value = local.dns
-}
+#output dns {
+#  value = local.dns
+#}
 
-output profile {
-  value = "swarms"
-}
+#output profile {
+#  value = "swarms"
+#}
 
-output account {
-  value = "916723593639"
-}
+#output account {
+#  value = "916723593639"
+#}
 
-output region {
-  value = "us-east-2"
-}
+#output region {
+#  value = "us-east-2"
+#}
 
 #SLOW
 #data "aws_ami" "ami" { # slow
@@ -83,10 +83,9 @@ count =0
   ssm_profile_name = "ssm-swarms-profile"
 }
 
-output api {
-  value = module.swarms_api
-}
-
+#output api {
+#  value = module.swarms_api
+#}
 
 
 # setup the github tokens
