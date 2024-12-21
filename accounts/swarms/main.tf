@@ -1,8 +1,7 @@
 locals {
   #ami_name = "ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-*"
-  ami_name  = "ubuntu-minimal/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-minimal-*"
+  ami_name  = "ubuntu-minimal/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-minimal-*" # useast2id=
   dns = "api.swarms.ai"
-  #dns = "api.arianakrasniqi.com"
   account = "916723593639"
   region  = "us-east-2"
 }
@@ -16,6 +15,7 @@ variable "owner" {
 variable "github_token" {
   description = "GitHub access token used to configure the provider"
   type        = string
+  default = ""
 }
 
 provider "github" {
@@ -48,19 +48,20 @@ output region {
 }
 
 #SLOW
-# data "aws_ami" "ami" {
+#data "aws_ami" "ami" { # slow
 #   most_recent      = true
 #   name_regex       = "^${local.ami_name}"
 # }
 locals {
-ami_id = "ami-0325b9a2dfb474b2d"
+       us_east_2_swarms_ami_id = "ami-0325b9a2dfb474b2d"
+       us_east_2_ami_id = "ami-0325b9a2dfb474b2d"
 }
 
 module "swarms_api" {
   source = "../../environments/swarms-aws-agent-api/dev/us-east-1"
   domain = local.dns
   #ami_id = data.aws_ami.ami.id
-  ami_id = local.ami_id
+  ami_id = local.us_east_2_swarms_ami_id
   
 
   name = "swarms"
@@ -73,7 +74,7 @@ count =0
   source = "../../environments/swarms-deploy/dev/us-east-1"
   domain = local.dns
   #ami_id = data.aws_ami.ami.id
-  ami_id = local.ami_id
+  ami_id = local.us_east_2_swarms_ami_id
   name = "swarmdeploy"
   tags = {project="swarmdeploy"}  
   vpc_id = "vpc-0b4cedd083227068d"
@@ -107,3 +108,9 @@ module call_swarms {
   source = "../../environments/call-swarms"
 
 }
+
+module ssm_observer {
+  source = "../../modules/aws/ssm/observability"
+  ami_id =  local.us_east_2_ami_id
+}
+

@@ -47,6 +47,11 @@ resource "aws_iam_policy" "default" {
   policy      = data.aws_iam_policy_document.default.json
 }
 
+resource "aws_iam_role_policy_attachment" "AmazonSSMManagedEC2InstanceDefaultPolicy" {
+  role       = join("", aws_iam_role.ssm.*.name)
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedEC2InstanceDefaultPolicy"
+}
+
 
 resource "aws_iam_role_policy_attachment" "default" {
 #  count = local.policy_only

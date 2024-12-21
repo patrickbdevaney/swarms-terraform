@@ -8,6 +8,9 @@ locals {
   tags = {
     project="swarms"
   }
+  dev_tags = {
+    sandbox="kye"
+  }
 }
 variable domain {}
 variable ami_id {}
@@ -164,7 +167,7 @@ module "asg_dynamic_new_ami" {
 module "asg_dynamic_new_ami_test" {
   # built with packer
   #count =0
-  tags = local.tags
+  tags = merge(local.tags, local.dev_tags)
   vpc_id = local.vpc_id
   image_id = local.new_ami_id
   ec2_subnet_id = module.vpc.ec2_public_subnet_id_1
@@ -173,7 +176,7 @@ module "asg_dynamic_new_ami_test" {
   source              = "./components/autoscaling_group"
 #  security_group_id   = module.security.internal_security_group_id
   instance_type       = each.key
-  name       = "swarms-ami-${each.key}"
+  name       = "test-swarms-ami-${each.key}"
   launch_template_id   = module.lt_dynamic_ami[each.key].launch_template_id
   target_group_arn = module.alb.test_alb_target_group_arn
 }

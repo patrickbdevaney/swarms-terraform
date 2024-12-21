@@ -19,6 +19,10 @@ locals {
     name = var.name
   }
 }
+data "aws_ssm_parameter" "cw_agent_config" {
+  #arn:aws:ssm:us-east-2:916723593639:parameter/cloudwatch-agent/config
+  name        = "/cloudwatch-agent/config"
+}
 resource "aws_launch_template" "ec2_launch_template" {
   name_prefix           = "${var.name}-launch-template-"
   image_id              = var.ami_id
@@ -56,7 +60,22 @@ resource "aws_launch_template" "ec2_launch_template" {
   apt-get install -y --no-install-recommends ca-certificates=20230311 curl=7.88.1-10+deb12u7 |  echo oops
   curl -O "https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/$(dpkg --print-architecture)/latest/amazon-cloudwatch-agent.deb"
   dpkg -i -E amazon-cloudwatch-agent.deb
- 
+  # Install prerequisite packages
+  apt-get install -y wget unzip systemd
+  # In case of missing dependencies
+  # apt-get install -f -y
+  # Configure and start the CloudWatch agent
+  /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c "ssm:${data.aws_ssm_parameter.cw_agent_config.name}"
+  # Enable and start the service using systemctl
+  systemctl enable amazon-cloudwatch-agent
+  systemctl start amazon-cloudwatch-agent
+
+  # Clean up downloaded files
+  rm -f amazon-cloudwatch-agent.deb
+  # Verify installation
+  systemctl status amazon-cloudwatch-agent
+
+
   if [ ! -d "/opt/swarms/" ]; then
     git clone https://github.com/jmikedupont2/swarms "/opt/swarms/"
   fi
