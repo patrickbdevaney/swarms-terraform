@@ -13,53 +13,59 @@ data "aws_iam_policy_document" "default" {
      effect    = "Allow"
    }
 
-  {
-    "Effect": "Allow",
-    "Principal": {
-        "Service": "logs.us-east-1.amazonaws.com"
-    },
-    "Action": [
-        "kms:Encrypt*",
-        "kms:Decrypt*",
-        "kms:ReEncrypt*",
-        "kms:GenerateDataKey*",
-        "kms:Describe*"
-    ],
-    "Resource": "*",
-    "Condition": {
-        "ArnLike": {
-            "kms:EncryptionContext:aws:logs:arn": "arn:aws:logs:us-east-1:xxxxx:log-group:SSM"
-        }
-    }
-},    
-{
-    "Effect": "Allow",
-    "Principal": {
-        "Service": "ssm.amazonaws.com"
-    },
-    "Action": [
-        "kms:Encrypt*",
-        "kms:Decrypt*",
-        "kms:ReEncrypt*",
-        "kms:GenerateDataKey*",
-        "kms:Describe*"
-    ],
-    "Resource": "*"            
-}, 
-{
-    "Effect": "Allow",    
-    "Action": [
-        "kms:Encrypt*",
-        "kms:Decrypt*",
-        "kms:ReEncrypt*",
-        "kms:GenerateDataKey*",
-        "kms:Describe*"
-    ],
-    "Resource": "*",
-    "Principal": {
-        "AWS": "arn:aws:iam::xxxxx:role/SSMRole"
-    }      
-}
+   statement {
+     actions = [
+       "logs:DescribeLogGroups",
+       "logs:DescribeLogStreams",
+       "logs:CreateLogGroup",
+       "logs:CreateLogStream",
+     ]
+     resources = [ "*" ]
+     effect    = "Allow"
+   }
+
+  statement {
+    effect = "Allow"
+    resources = [  "arn:aws:s3:::swarms-session-logs*"  ]
+    actions = [
+      "s3:GetEncryptionConfiguration"
+    ]
+  }
+    
+  statement {
+    effect = "Allow"
+         resources = [ "*" ]
+    actions = [
+      "kms:Encrypt*",
+      "kms:Decrypt*",
+      "kms:ReEncrypt*",
+      "kms:GenerateDataKey*",
+      "kms:Describe*"
+    ]
+  }
+
+  # statement {
+  #   sid    = "Allow CloudWatch access"
+  #   effect = "Allow"
+  #   principals {
+  #     type        = "Service"
+  #     identifiers = ["logs.us-east-2.amazonaws.com"]
+  #   }
+  #   actions = [
+  #     "kms:Encrypt*",
+  #     "kms:Decrypt*",
+  #     "kms:ReEncrypt*",
+  #     "kms:GenerateDataKey*",
+  #     "kms:Describe*"
+  #   ]
+  #   condition {
+  #     test     = "ArnLike"
+  #     values   = ["arn:aws:logs:region:${data.aws_caller_identity.current.account_id}:*"]
+  #     variable = "kms:EncryptionContext:aws:logs:arn"
+  #   }
+  # }
+
+  #arn:aws:logs:us-east-2:916723593639:log-group::log-stream
   
 #  statement {
 #    actions   = ["${var.ssm_actions}"]
