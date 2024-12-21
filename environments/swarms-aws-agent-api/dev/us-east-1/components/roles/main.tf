@@ -1,25 +1,4 @@
 variable tags {}
-# data "aws_iam_policy_document" "assume_role" {
-#   statement {
-#     effect  = "Allow"
-#     actions = ["sts:AssumeRole"]
-
-#     principals {
-#       type        = "Service"
-#       identifiers = ["ec2.amazonaws.com"]
-#     }
-#   }
-
-#   statement {
-#     effect  = "Allow"
-#     actions = ["sts:AssumeRole"]
-
-#     principals {
-#       type        = "AWS"
-#       identifiers = ["${var.assume_role_arns}"]
-#     }
-#   }
-# }
 
 data "aws_iam_policy_document" "default" {
   statement {
@@ -40,11 +19,6 @@ data "aws_iam_policy_document" "default" {
 #    effect    = "Allow"
 #  }
 
-  # statement {
-  #   actions   = ["kms:Decrypt"]
-  #   resources = ["${data.aws_kms_key.default.arn}"]
-  #   effect    = "Allow"
-  # }
 }
 
 resource "aws_iam_policy" "default" {
@@ -58,9 +32,6 @@ resource "aws_iam_role_policy_attachment" "AmazonSSMManagedEC2InstanceDefaultPol
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedEC2InstanceDefaultPolicy"
 }
 
-
-
-
 resource "aws_iam_role_policy_attachment" "default" {
 #  count = local.policy_only
   role       = join("", aws_iam_role.ssm.*.name)
@@ -72,19 +43,10 @@ resource "aws_iam_role_policy_attachment" "SSM-role-policy-attach" {
   policy_arn = data.aws_iam_policy.AmazonSSMManagedInstanceCore.arn
 }
 
-
-####
-# resource "aws_iam_role" "default" {
-# #  count = local.policy_only
-
-#   name                 = "swarms-ssm"
-#   assume_role_policy   = join("", data.aws_iam_policy_document.assume_role.*.json)
-#   description          = "IAM Role with permissions to perform actions on SSM resources"
-#   max_session_duration = var.max_session_duration
-# }
 data "aws_iam_policy" "AmazonSSMManagedInstanceCore" {
   arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
+
 
 resource "aws_iam_role" "ssm" {
   name = "ssm-swarms-role"
