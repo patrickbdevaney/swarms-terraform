@@ -224,185 +224,8 @@ resource "aws_ssm_association" "cloudwatch_agent_update" {
   }
 }
 
-# Updated CloudWatch Agent configuration in SSM Parameter Store
-resource "aws_ssm_parameter" "cw_agent_config" {
-  name        = "/cloudwatch-agent/config"
-  description = "CloudWatch agent configuration"
-  type        = "SecureString"
-  value       = jsonencode({
-    agent = {
-      metrics_collection_interval = 60
-      run_as_user               = "root"
-    }
-    metrics = {
-      namespace = "CustomEC2Metrics"
-      metrics_collected = {
-        cpu = {
-          resources = ["*"]
-          measurement = [
-            "cpu_usage_idle",
-            "cpu_usage_user",
-            "cpu_usage_system",
-            "cpu_usage_iowait"
-          ]
-          totalcpu = true
-          metrics_collection_interval = 60
-        }
-        mem = {
-          measurement = [
-            "mem_used_percent",
-            "mem_total",
-            "mem_used",
-            "mem_cached",
-            "mem_buffered"
-          ]
-          metrics_collection_interval = 60
-        }
-        disk = {
-          resources = ["/"]
-          measurement = [
-            "disk_used_percent",
-            "disk_free",
-            "disk_total",
-            "disk_inodes_free",
-            "disk_inodes_used"
-          ]
-          metrics_collection_interval = 60
-        }
-        netstat = {
-          metrics_collection_interval = 60
-          measurement = [
-            "tcp_established",
-            "tcp_time_wait"
-          ]
-        }
-      }
-    }
-    logs = {
-      log_stream_name="logs"
-      force_flush_interval=60
-      logs_collected = {
-        files = {
-          collect_list = [
-            {
-              file_path = "/var/log/messages"
-              log_group_name = "/ec2/system"
-              log_stream_name = "{instance_id}"
-              timezone = "UTC"
-            },
-	    
-	   # nginx
-            {
-              file_path = "/var/log/nginx/swarms/access.log"
-              log_group_name = "/swarms/ngnix_access"
-              log_stream_name = "{instance_id}"
-              timezone = "UTC"
-            },
-            {
-              file_path = "/var/log/nginx/swarms/error.log"
-              log_group_name = "/swarms/nginx_error"
-              log_stream_name = "{instance_id}"
-              timezone = "UTC"
-            },
-
-            {
-              file_path = "/var/log/cloud-init-output.log"
-              log_group_name = "/ec2/init"
-              log_stream_name = "{instance_id}"
-              timezone = "UTC"
-            },
-            {
-              file_path = "/var/log/swarms_systemd.log"
-              log_group_name = "/swarms/systemd"
-              log_stream_name = "{instance_id}"
-              timezone = "UTC"
-            },
-            {
-              file_path = "/var/log/secure"
-              log_group_name = "/ec2/secure"
-              log_stream_name = "{instance_id}"
-              timezone = "UTC"
-            }
-          ]
-        }
-      }
-    }
-  })
-}
-
-# SSM command to update CloudWatch configuration on running instances
-resource "aws_ssm_association" "update_cloudwatch_config" {
-  name = "AWS-RunShellScript"
-
-  targets {
-    key    = "tag:Monitoring"
-    values = ["enabled"]
-  }
-
-  parameters = {
-    commands = "amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c ssm:${aws_ssm_parameter.cw_agent_config.name}\n      systemctl restart amazon-cloudwatch-agent"
-    
-  }
-}
-
-resource "aws_cloudwatch_log_group" "log_groups" {
-  for_each = toset([
-    "/swarms/ngnix_access",
-    "/swarms/nginx_error",
-    "/swarms/systemd", "/ec2/init"  ])
-  name     = each.key
-  retention_in_days = 30
-  kms_key_id = "arn:aws:kms:us-east-2:916723593639:key/cc8e1ee7-a05b-4642-bd81-ba5548635590"
-}
-
-# CloudWatch Log Groups for collected logs
-resource "aws_cloudwatch_log_group" "system_logs" {
-  name              = "/ec2/system"
-  retention_in_days = 30
-  kms_key_id = "arn:aws:kms:us-east-2:916723593639:key/cc8e1ee7-a05b-4642-bd81-ba5548635590"
-}
-
-resource "aws_cloudwatch_log_group" "secure_logs" {
-  name              = "/ec2/secure"
-  retention_in_days = 30
-  kms_key_id = "arn:aws:kms:us-east-2:916723593639:key/cc8e1ee7-a05b-4642-bd81-ba5548635590"
-}
-
-# SSM Document for CloudWatch agent troubleshooting
-resource "aws_ssm_document" "cloudwatch_agent_troubleshoot" {
-  name            = "TroubleshootCloudWatchAgent"
-  document_type   = "Command"
-  document_format = "YAML"
-
-  content = <<DOC
-schemaVersion: '2.2'
-description: 'Troubleshoot CloudWatch Agent'
-parameters: {}
-mainSteps:
-  - action: aws:runShellScript
-    name: CheckCloudWatchAgent
-    inputs:
-      runCommand:
-        - systemctl status amazon-cloudwatch-agent
-        - cat /opt/aws/amazon-cloudwatch-agent/logs/amazon-cloudwatch-agent.log
-        - ps aux | grep amazon-cloudwatch-agent
-        - amazon-cloudwatch-agent-ctl -a status
-DOC
-}
-
-# Output the troubleshooting command
-output "troubleshoot_command" {
-  value = "aws ssm start-automation-execution --document-name ${aws_ssm_document.cloudwatch_agent_troubleshoot.name} --target Key=tag:Monitoring,Values=enabled"
-}
-
-
-
-# Updated CloudWatch Agent configuration in SSM Parameter Store
-resource "aws_ssm_parameter" "cw_agent_config_details" {
-  name        = "/cloudwatch-agent/config/details"
-  description = "CloudWatch agent configuration with details"
-  type        = "SecureString"
-  value       = jsonencode({
+locals {
+  normal_config = {
     "agent": {
         "metrics_collection_interval": 60
     },
@@ -533,5 +356,185 @@ resource "aws_ssm_parameter" "cw_agent_config_details" {
             "application_signals": {}
         }
     }
-  })
+  }
+  
+  detailed_config = {
+    agent = {
+      metrics_collection_interval = 60
+      run_as_user               = "root"
+    }
+    metrics = {
+      namespace = "CustomEC2Metrics"
+      metrics_collected = {
+        cpu = {
+          resources = ["*"]
+          measurement = [
+            "cpu_usage_idle",
+            "cpu_usage_user",
+            "cpu_usage_system",
+            "cpu_usage_iowait"
+          ]
+          totalcpu = true
+          metrics_collection_interval = 60
+        }
+        mem = {
+          measurement = [
+            "mem_used_percent",
+            "mem_total",
+            "mem_used",
+            "mem_cached",
+            "mem_buffered"
+          ]
+          metrics_collection_interval = 60
+        }
+        disk = {
+          resources = ["/"]
+          measurement = [
+            "disk_used_percent",
+            "disk_free",
+            "disk_total",
+            "disk_inodes_free",
+            "disk_inodes_used"
+          ]
+          metrics_collection_interval = 60
+        }
+        netstat = {
+          metrics_collection_interval = 60
+          measurement = [
+            "tcp_established",
+            "tcp_time_wait"
+          ]
+        }
+      }
+    }
+    logs = {
+      log_stream_name="logs"
+      force_flush_interval=60
+      logs_collected = {
+        files = {
+          collect_list = [
+            {
+              file_path = "/var/log/messages"
+              log_group_name = "/ec2/system"
+              log_stream_name = "{instance_id}"
+              timezone = "UTC"
+            },
+	    
+	   # nginx
+            {
+              file_path = "/var/log/nginx/swarms/access.log"
+              log_group_name = "/swarms/ngnix_access"
+              log_stream_name = "{instance_id}"
+              timezone = "UTC"
+            },
+            {
+              file_path = "/var/log/nginx/swarms/error.log"
+              log_group_name = "/swarms/nginx_error"
+              log_stream_name = "{instance_id}"
+              timezone = "UTC"
+            },
+
+            {
+              file_path = "/var/log/cloud-init-output.log"
+              log_group_name = "/ec2/init"
+              log_stream_name = "{instance_id}"
+              timezone = "UTC"
+            },
+            {
+              file_path = "/var/log/swarms_systemd.log"
+              log_group_name = "/swarms/systemd"
+              log_stream_name = "{instance_id}"
+              timezone = "UTC"
+            },
+            {
+              file_path = "/var/log/secure"
+              log_group_name = "/ec2/secure"
+              log_stream_name = "{instance_id}"
+              timezone = "UTC"
+            }
+          ]
+        }
+      }
+    }
+  }
+}
+# Updated CloudWatch Agent configuration in SSM Parameter Store
+resource "aws_ssm_parameter" "cw_agent_config" {
+  name        = "/cloudwatch-agent/config"
+  description = "CloudWatch agent configuration"
+  type        = "SecureString"
+  value       = jsonencode(local.normal_config)
+}
+
+# SSM command to update CloudWatch configuration on running instances
+resource "aws_ssm_association" "update_cloudwatch_config" {
+  name = "AWS-RunShellScript"
+
+  targets {
+    key    = "tag:Monitoring"
+    values = ["enabled"]
+  }
+
+  parameters = {
+    commands = "amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c ssm:${aws_ssm_parameter.cw_agent_config.name}\n      systemctl restart amazon-cloudwatch-agent"
+    
+  }
+}
+
+resource "aws_cloudwatch_log_group" "log_groups" {
+  for_each = toset([
+    "/swarms/ngnix_access",
+    "/swarms/nginx_error",
+    "/swarms/systemd", "/ec2/init"  ])
+  name     = each.key
+  retention_in_days = 30
+  kms_key_id = "arn:aws:kms:us-east-2:916723593639:key/cc8e1ee7-a05b-4642-bd81-ba5548635590"
+}
+
+# CloudWatch Log Groups for collected logs
+resource "aws_cloudwatch_log_group" "system_logs" {
+  name              = "/ec2/system"
+  retention_in_days = 30
+  kms_key_id = "arn:aws:kms:us-east-2:916723593639:key/cc8e1ee7-a05b-4642-bd81-ba5548635590"
+}
+
+resource "aws_cloudwatch_log_group" "secure_logs" {
+  name              = "/ec2/secure"
+  retention_in_days = 30
+  kms_key_id = "arn:aws:kms:us-east-2:916723593639:key/cc8e1ee7-a05b-4642-bd81-ba5548635590"
+}
+
+# SSM Document for CloudWatch agent troubleshooting
+resource "aws_ssm_document" "cloudwatch_agent_troubleshoot" {
+  name            = "TroubleshootCloudWatchAgent"
+  document_type   = "Command"
+  document_format = "YAML"
+
+  content = <<DOC
+schemaVersion: '2.2'
+description: 'Troubleshoot CloudWatch Agent'
+parameters: {}
+mainSteps:
+  - action: aws:runShellScript
+    name: CheckCloudWatchAgent
+    inputs:
+      runCommand:
+        - systemctl status amazon-cloudwatch-agent
+        - cat /opt/aws/amazon-cloudwatch-agent/logs/amazon-cloudwatch-agent.log
+        - ps aux | grep amazon-cloudwatch-agent
+        - amazon-cloudwatch-agent-ctl -a status
+DOC
+}
+
+# Output the troubleshooting command
+output "troubleshoot_command" {
+  value = "aws ssm start-automation-execution --document-name ${aws_ssm_document.cloudwatch_agent_troubleshoot.name} --target Key=tag:Monitoring,Values=enabled"
+}
+
+# Updated CloudWatch Agent configuration in SSM Parameter Store
+resource "aws_ssm_parameter" "cw_agent_config_details" {
+  name        = "/cloudwatch-agent/config/details"
+  description = "CloudWatch agent configuration with details"
+  type        = "SecureString"
+  value       = jsonencode(local.detailed_config)
 }
