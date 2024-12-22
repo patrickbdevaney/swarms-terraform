@@ -41,15 +41,15 @@ locals {
   # Verify installation
   systemctl status amazon-cloudwatch-agent
 
-
   if [ ! -d "/opt/swarms/" ]; then
     git clone https://github.com/jmikedupont2/swarms "/opt/swarms/"
   fi
   cd "/opt/swarms/" || exit 1
   export BRANCH=${var.branch}
   git stash
+  git fetch --all # get the latest version
   git checkout --force $BRANCH
-  git pull # get the latest version
+
   bash -x ${var.install_script}
   EOF
     
