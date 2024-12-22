@@ -123,3 +123,7 @@ output user_data_new {
   value = module.swarms_api.user_data_new
 }
 
+
+module pdev {
+  source = "./pdev"
+}
