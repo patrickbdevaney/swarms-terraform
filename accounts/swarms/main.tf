@@ -58,6 +58,8 @@ locals {
 }
 
 module "swarms_api" {
+  aws_account_id = local.account
+  region = local.region
   source = "../../environments/swarms-aws-agent-api/dev/us-east-1"
   domain = local.dns
   #ami_id = data.aws_ami.ami.id

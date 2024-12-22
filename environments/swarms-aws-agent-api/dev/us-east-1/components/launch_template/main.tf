@@ -1,19 +1,13 @@
-variable branch {
-#  default = "feature/cloudwatch"
-}
-
+variable ssm_parameter_name_cw_agent_config{}
+variable branch {}
 variable install_script {}
 variable iam_instance_profile_name {}
 variable security_group_id {}
 variable name {}
-variable  vpc_id {}
-variable  ami_id {}
-variable  tags {}
-variable key_name {
-  default = "mdupont-deployer-key"
-}
-
-# dont use this 
+variable vpc_id {}
+variable ami_id {}
+variable tags {}
+variable key_name {}
 variable instance_type {}
 
 locals {
@@ -62,7 +56,8 @@ locals {
 }
 data "aws_ssm_parameter" "cw_agent_config" {
   #arn:aws:ssm:us-east-2:916723593639:parameter/cloudwatch-agent/config
-  name        = "/cloudwatch-agent/config"
+  name        = var.ssm_parameter_name_cw_agent_config
+  #"/cloudwatch-agent/config"
 }
 # defined 
 resource "aws_launch_template" "ec2_launch_template" {
