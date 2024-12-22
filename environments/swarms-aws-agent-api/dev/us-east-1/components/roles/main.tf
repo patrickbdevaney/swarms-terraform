@@ -22,6 +22,7 @@ data "aws_iam_policy_document" "default" {
        "logs:PutLogEvents",
        "logs:PutLogEventsBatch",
        "cloudwatch:PutMetricData",
+       "ec2:DescribeTags",
      ]
      resources = [ "*" ]
      effect    = "Allow"
