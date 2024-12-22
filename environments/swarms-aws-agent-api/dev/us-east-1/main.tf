@@ -78,22 +78,38 @@ module "roles" {
   tags = local.tags 
 }
 
-module "lt_dynamic" {
-  vpc_id = local.vpc_id
+# module "lt_dynamic" {
+#   vpc_id = local.vpc_id
+#   branch =  "feature/ec2"
+#   for_each = toset(var.instance_types)
+#   instance_type       = each.key
+#   name       = "swarms-size-${each.key}"
+#   security_group_id = module.security.internal_security_group_id
+#   ami_id = var.ami_id
+#   tags= local.tags
+#   source = "./components/launch_template"
+#   iam_instance_profile_name = module.roles.ssm_profile_name
+#   #aws_iam_instance_profile.ssm.name
+#   install_script = "/opt/swarms/api/install.sh"
+# }
+
+module "lt_dynamic_ami_prod" {
+  #branch =  "feature/cloudwatch"
   branch =  "feature/ec2"
+  vpc_id = local.vpc_id
   for_each = toset(var.instance_types)
   instance_type       = each.key
-  name       = "swarms-size-${each.key}"
+  name       = "swarms-ami-${each.key}"
   security_group_id = module.security.internal_security_group_id
-  ami_id = var.ami_id
+  ami_id = local.new_ami_id
   tags= local.tags
   source = "./components/launch_template"
   iam_instance_profile_name = module.roles.ssm_profile_name
   #aws_iam_instance_profile.ssm.name
-  install_script = "/opt/swarms/api/install.sh"
+  install_script = "/opt/swarms/api/just_run.sh"
 }
 
-module "lt_dynamic_ami" {
+module "lt_dynamic_ami_test" {
   branch =  "feature/cloudwatch"
   vpc_id = local.vpc_id
   for_each = toset(var.instance_types)
@@ -108,13 +124,6 @@ module "lt_dynamic_ami" {
   install_script = "/opt/swarms/api/just_run.sh"
 }
 
-output security_group_id {
-  value = module.security.security_group_id
-}
-
-output vpc {
-  value = module.vpc
-}
 
 
 module "alb" { 
@@ -162,7 +171,7 @@ module "asg_dynamic_new_ami" {
 #  security_group_id   = module.security.internal_security_group_id
   instance_type       = each.key
   name       = "swarms-ami-${each.key}"
-  launch_template_id   = module.lt_dynamic_ami[each.key].launch_template_id
+  launch_template_id   = module.lt_dynamic_ami_prod[each.key].launch_template_id
   target_group_arn = module.alb.alb_target_group_arn
 }
 
@@ -179,6 +188,19 @@ module "asg_dynamic_new_ami_test" {
 #  security_group_id   = module.security.internal_security_group_id
   instance_type       = each.key
   name       = "test-swarms-ami-${each.key}"
-  launch_template_id   = module.lt_dynamic_ami[each.key].launch_template_id
+  launch_template_id   = module.lt_dynamic_ami_test[each.key].launch_template_id
   target_group_arn = module.alb.test_alb_target_group_arn
+}
+
+output security_group_id {
+  value = module.security.security_group_id
+}
+
+output vpc {
+  value = module.vpc
+}
+
+
+output user_data_new {
+  value = module.lt_dynamic_ami_test["t3.medium"].user_data
 }

@@ -22,40 +22,7 @@ locals {
     instance_type = var.instance_type
     name = var.name
   }
-}
-data "aws_ssm_parameter" "cw_agent_config" {
-  #arn:aws:ssm:us-east-2:916723593639:parameter/cloudwatch-agent/config
-  name        = "/cloudwatch-agent/config"
-}
-# defined 
-resource "aws_launch_template" "ec2_launch_template" {
-  name_prefix           = "${var.name}-launch-template-"
-  image_id              = var.ami_id
-  key_name = var.key_name
-  instance_type        = var.instance_type
-  network_interfaces {
-    associate_public_ip_address = true
-    delete_on_termination = true
-    security_groups          = [var.security_group_id]
-  }
- 
-  iam_instance_profile {
-    #   iam_instance_profile_arn = aws_iam_instance_profile.ssm.arn
-    name = var.iam_instance_profile_name #aws_iam_instance_profile.ec2_instance_profile.name
-  }
-  lifecycle {
-    create_before_destroy = true
-  }
-  block_device_mappings {
-    device_name = "/dev/sda1"
-    ebs {
-      volume_size = 30
-      volume_type = "gp3"
-      encrypted   = true
-    }
-  }
-
-  user_data = base64encode(<<-EOF
+  user_data = <<-EOF
   #!/bin/bash
   export HOME=/root
   apt update
@@ -91,7 +58,40 @@ resource "aws_launch_template" "ec2_launch_template" {
   git pull # get the latest version
   bash -x ${var.install_script}
   EOF
-    )
+    
+}
+data "aws_ssm_parameter" "cw_agent_config" {
+  #arn:aws:ssm:us-east-2:916723593639:parameter/cloudwatch-agent/config
+  name        = "/cloudwatch-agent/config"
+}
+# defined 
+resource "aws_launch_template" "ec2_launch_template" {
+  name_prefix           = "${var.name}-launch-template-"
+  image_id              = var.ami_id
+  key_name = var.key_name
+  instance_type        = var.instance_type
+  network_interfaces {
+    associate_public_ip_address = true
+    delete_on_termination = true
+    security_groups          = [var.security_group_id]
+  }
+ 
+  iam_instance_profile {
+    #   iam_instance_profile_arn = aws_iam_instance_profile.ssm.arn
+    name = var.iam_instance_profile_name #aws_iam_instance_profile.ec2_instance_profile.name
+  }
+  lifecycle {
+    create_before_destroy = true
+  }
+  block_device_mappings {
+    device_name = "/dev/sda1"
+    ebs {
+      volume_size = 30
+      volume_type = "gp3"
+      encrypted   = true
+    }
+  }
+  user_data = base64encode(local.user_data)
   tags = var.tags  
 }
 
@@ -101,4 +101,7 @@ output "lt" {
 }
 output "launch_template_id" {
   value = resource.aws_launch_template.ec2_launch_template.id
+}
+output "user_data" {
+  value = local.user_data
 }

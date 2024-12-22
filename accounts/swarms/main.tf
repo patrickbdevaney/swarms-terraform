@@ -62,7 +62,7 @@ module "swarms_api" {
   domain = local.dns
   #ami_id = data.aws_ami.ami.id
   ami_id = local.us_east_2_swarms_ami_id
-  
+
 
   name = "swarms"
   tags = {project="swarms"}
@@ -115,5 +115,9 @@ module ssm_observer {
 
 module ssm_setup {
   source = "../../modules/aws/ssm/setup"
+}
+
+output user_data_new {
+  value = module.swarms_api.user_data_new
 }
 
