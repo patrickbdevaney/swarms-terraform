@@ -276,6 +276,53 @@ resource "aws_iam_role" "lambda_exec" {
   })
 }
 
+#Implementation by Patrick for telemetry/ AWS cloudwatch
+resource "aws_xray_sampling_rule" "swarms_api" {
+  rule_name = "swarms-api"
+  priority  = 1
+  reservoir_size = 1
+  fixed_rate = 1.0
+  host = "*"
+  http_method = "*"
+  service_name = "swarms-api"
+  service_type = "*"
+  url_path = "*"
+  version = 1
+}
+
+resource "aws_cloudwatch_log_group" "otel_logs" {
+  name              = "/aws/otel/swarms"
+  retention_in_days = 30
+}
+
+resource "aws_iam_role" "otel_collector" {
+  name = "otel-collector-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ecs-tasks.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "otel_xray" {
+  role       = aws_iam_role.otel_collector.name
+  policy_arn = "arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess"
+}
+
+resource "aws_iam_role_policy_attachment" "otel_cloudwatch" {
+  role       = aws_iam_role.otel_collector.name
+  policy_arn = "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
+}
+#End of Telemetry
+
 # Recursive module call to create resources for the next level
 module "swarm_terraform_next" {
   source        = "./main.tf"
