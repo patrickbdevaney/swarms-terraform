@@ -1,6 +1,22 @@
+<<<<<<< HEAD
 name: CallSwarms
 on:
   workflow_dispatch:
+=======
+on:
+  workflow_dispatch:
+
+  push:
+    branches:
+      - "feature/call_swarms"
+  pull_request:
+    branches:
+      - "main" 
+    paths:
+      - ".github/workflows/call-swarms.yaml"
+
+name: CallSwarms
+>>>>>>> cb9a924f71df0550c253627b598a5ca4428c8b85
 jobs:
   caller-identity:    
     name: Return the IAM user
@@ -14,6 +30,11 @@ jobs:
       with:
         aws-region: ${{ secrets.AWS_REGION }}
         role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github
+<<<<<<< HEAD
     - run: |
         aws sts get-caller-identity
         aws ssm send-command --document-name "deploy" --document-version "2" --targets '[{"Key":"InstanceIds","Values":["i-060238b47044e8dd3"]}]' --parameters '{"GitUrl":["https://github.com/kyegomez/swarms"],"GitName":["kye"],"GitVersion":["master"]}' --timeout-seconds 600 --max-concurrency "50" --max-errors "0" --region us-east-2
+=======
+    - uses: actions/checkout@v2
+    - run: bash -x -e      ./actions/call_swarms.sh
+>>>>>>> cb9a924f71df0550c253627b598a5ca4428c8b85
